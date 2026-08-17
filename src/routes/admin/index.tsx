@@ -1,14 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-} from "recharts";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { IndianRupee, ShoppingBag, Clock, TrendingUp } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { adminFetch } from "@/lib/admin-api";
@@ -55,7 +47,9 @@ function Dashboard() {
     });
     days.push({
       label: d.toLocaleDateString("en-IN", { day: "2-digit", month: "short" }),
-      revenue: dayOrders.filter((o) => o.payment_status === "paid").reduce((s, o) => s + Number(o.total_amount), 0),
+      revenue: dayOrders
+        .filter((o) => o.payment_status === "paid")
+        .reduce((s, o) => s + Number(o.total_amount), 0),
       orders: dayOrders.length,
     });
   }
@@ -63,14 +57,21 @@ function Dashboard() {
   const stats = [
     { label: "आजच्या ऑर्डर्स", en: "Orders today", value: ordersToday, icon: ShoppingBag },
     { label: "एकूण ऑर्डर्स", en: "Total orders", value: list.length, icon: TrendingUp },
-    { label: "एकूण महसूल", en: "Revenue (paid)", value: `₹${revenue.toLocaleString("en-IN")}`, icon: IndianRupee },
+    {
+      label: "एकूण महसूल",
+      en: "Revenue (paid)",
+      value: `₹${revenue.toLocaleString("en-IN")}`,
+      icon: IndianRupee,
+    },
     { label: "प्रलंबित", en: "Pending", value: pending, icon: Clock },
   ];
 
   return (
     <AdminLayout title="डॅशबोर्ड">
       {error && (
-        <p className="mb-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>
+        <p className="mb-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+        </p>
       )}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" data-testid="dashboard-stats">
         {stats.map((s) => {
@@ -99,7 +100,11 @@ function Dashboard() {
               <XAxis dataKey="label" tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} />
               <YAxis tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} />
               <Tooltip
-                contentStyle={{ borderRadius: 12, border: "1px solid var(--border)", background: "var(--card)" }}
+                contentStyle={{
+                  borderRadius: 12,
+                  border: "1px solid var(--border)",
+                  background: "var(--card)",
+                }}
                 formatter={(v: number) => [`₹${v}`, "Revenue"]}
               />
               <Bar dataKey="revenue" fill="var(--gold)" radius={[6, 6, 0, 0]} />

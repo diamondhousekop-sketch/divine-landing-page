@@ -42,7 +42,11 @@ export const Route = createFileRoute("/api/admin/testimonials")({
         if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
         const payload = { ...parsed.data, vimeo_url: parsed.data.vimeo_url || null };
         const admin = getAdminClient();
-        const { data, error } = await admin.from("testimonials").insert(payload).select("*").single();
+        const { data, error } = await admin
+          .from("testimonials")
+          .insert(payload)
+          .select("*")
+          .single();
         if (error) return serverError("Could not create testimonial");
         return json({ testimonial: data });
       },

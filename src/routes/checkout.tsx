@@ -16,7 +16,10 @@ const schema = z.object({
     .regex(/^(\+91[\s-]?)?[6-9]\d{9}$/, "10 अंकी मोबाईल नंबर टाका"),
   customer_email: z.string().trim().email("योग्य ईमेल टाका").optional().or(z.literal("")),
   customer_address: z.string().trim().min(6, "संपूर्ण पत्ता टाका"),
-  customer_pincode: z.string().trim().regex(/^\d{6}$/, "6 अंकी पिनकोड टाका"),
+  customer_pincode: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, "6 अंकी पिनकोड टाका"),
   quantity: z.coerce.number().int().min(1).max(10),
   payment_method: z.enum(["cod", "online"]),
 });
@@ -97,8 +100,9 @@ function Checkout() {
       const ok = await loadRazorpayScript();
       if (!ok) throw new Error("पेमेंट विंडो लोड होऊ शकली नाही. पुन्हा प्रयत्न करा.");
 
-      const RazorpayCtor = (window as unknown as { Razorpay: new (o: unknown) => { open: () => void } })
-        .Razorpay;
+      const RazorpayCtor = (
+        window as unknown as { Razorpay: new (o: unknown) => { open: () => void } }
+      ).Razorpay;
       const rzp = new RazorpayCtor({
         key: init.key_id,
         amount: init.amount,
@@ -145,7 +149,9 @@ function Checkout() {
         </Link>
 
         <div className="mt-4 text-center">
-          <h1 className="deva text-3xl font-normal text-primary md:text-4xl">तुमची ऑर्डर पूर्ण करा</h1>
+          <h1 className="deva text-3xl font-normal text-primary md:text-4xl">
+            तुमची ऑर्डर पूर्ण करा
+          </h1>
           <GoldSwash className="mx-auto mt-3 w-40" />
         </div>
 
@@ -160,9 +166,15 @@ function Checkout() {
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <label className="deva text-sm text-foreground">पूर्ण नाव *</label>
-                <input className={inputCls} data-testid="input-name" {...register("customer_name")} />
+                <input
+                  className={inputCls}
+                  data-testid="input-name"
+                  {...register("customer_name")}
+                />
                 {errors.customer_name && (
-                  <p className="deva mt-1 text-xs text-destructive">{errors.customer_name.message}</p>
+                  <p className="deva mt-1 text-xs text-destructive">
+                    {errors.customer_name.message}
+                  </p>
                 )}
               </div>
               <div>
@@ -175,7 +187,9 @@ function Checkout() {
                   {...register("customer_phone")}
                 />
                 {errors.customer_phone && (
-                  <p className="deva mt-1 text-xs text-destructive">{errors.customer_phone.message}</p>
+                  <p className="deva mt-1 text-xs text-destructive">
+                    {errors.customer_phone.message}
+                  </p>
                 )}
               </div>
               <div>
@@ -188,7 +202,9 @@ function Checkout() {
                   {...register("customer_email")}
                 />
                 {errors.customer_email && (
-                  <p className="deva mt-1 text-xs text-destructive">{errors.customer_email.message}</p>
+                  <p className="deva mt-1 text-xs text-destructive">
+                    {errors.customer_email.message}
+                  </p>
                 )}
               </div>
               <div className="sm:col-span-2">
@@ -201,7 +217,9 @@ function Checkout() {
                   {...register("customer_address")}
                 />
                 {errors.customer_address && (
-                  <p className="deva mt-1 text-xs text-destructive">{errors.customer_address.message}</p>
+                  <p className="deva mt-1 text-xs text-destructive">
+                    {errors.customer_address.message}
+                  </p>
                 )}
               </div>
               <div>
@@ -214,7 +232,9 @@ function Checkout() {
                   {...register("customer_pincode")}
                 />
                 {errors.customer_pincode && (
-                  <p className="deva mt-1 text-xs text-destructive">{errors.customer_pincode.message}</p>
+                  <p className="deva mt-1 text-xs text-destructive">
+                    {errors.customer_pincode.message}
+                  </p>
                 )}
               </div>
               <div>
@@ -233,7 +253,13 @@ function Checkout() {
             <h2 className="deva mt-8 text-xl text-foreground">पेमेंट पद्धत</h2>
             <div className="mt-4 space-y-3">
               <label className="surface-card flex cursor-pointer items-center gap-3 px-4 py-3">
-                <input type="radio" value="cod" defaultChecked data-testid="payment-cod" {...register("payment_method")} />
+                <input
+                  type="radio"
+                  value="cod"
+                  defaultChecked
+                  data-testid="payment-cod"
+                  {...register("payment_method")}
+                />
                 <span className="deva text-sm text-foreground">
                   Cash on Delivery — घरपोच आल्यावर पैसे द्या 🚚
                 </span>
@@ -255,7 +281,10 @@ function Checkout() {
             </div>
 
             {serverError && (
-              <p className="deva mt-5 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive" data-testid="checkout-error">
+              <p
+                className="deva mt-5 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive"
+                data-testid="checkout-error"
+              >
                 {serverError}
               </p>
             )}
@@ -287,7 +316,10 @@ function Checkout() {
               </div>
               <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
                 <span className="deva font-medium text-primary">एकूण रक्कम</span>
-                <span className="font-display text-2xl font-bold text-navy" data-testid="summary-total">
+                <span
+                  className="font-display text-2xl font-bold text-navy"
+                  data-testid="summary-total"
+                >
                   ₹{total}
                 </span>
               </div>
@@ -301,7 +333,10 @@ function Checkout() {
                 <Truck className="h-4 w-4 text-accent" />
                 <span className="deva">सुरक्षित पॅकिंग · घरपोच डिलिव्हरी</span>
               </p>
-              <a href="tel:+919657130131" className="flex items-center gap-2 text-[var(--whatsapp)]">
+              <a
+                href="tel:+919657130131"
+                className="flex items-center gap-2 text-[var(--whatsapp)]"
+              >
                 <Phone className="h-4 w-4" />
                 <span className="deva">मदतीसाठी: 96 57 130 131</span>
               </a>

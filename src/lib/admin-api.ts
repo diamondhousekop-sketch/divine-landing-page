@@ -17,11 +17,10 @@ export async function adminFetch<T = unknown>(
   let url = path;
   if (options.params) url += "?" + new URLSearchParams(options.params).toString();
 
-  const res = await fetch(url, {
-    method: options.method ?? "GET",
-    headers,
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-  });
+  const init: RequestInit = { method: options.method ?? "GET", headers };
+  if (options.body !== undefined) init.body = JSON.stringify(options.body);
+
+  const res = await fetch(url, init);
   const text = await res.text();
   const data = text ? JSON.parse(text) : {};
   if (!res.ok) {
@@ -39,6 +38,7 @@ export async function publicPost<T = unknown>(path: string, body: unknown): Prom
   });
   const text = await res.text();
   const data = text ? JSON.parse(text) : {};
-  if (!res.ok) throw new Error((data && (data.error as string)) || `Request failed (${res.status})`);
+  if (!res.ok)
+    throw new Error((data && (data.error as string)) || `Request failed (${res.status})`);
   return data as T;
 }

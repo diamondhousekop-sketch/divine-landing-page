@@ -47,10 +47,7 @@ export const Route = createFileRoute("/api/payment/verify")({
           const admin = getAdminClient();
 
           if (!valid) {
-            await admin
-              .from("orders")
-              .update({ payment_status: "failed" })
-              .eq("id", p.order_id);
+            await admin.from("orders").update({ payment_status: "failed" }).eq("id", p.order_id);
             return badRequest("Payment signature verification failed");
           }
 

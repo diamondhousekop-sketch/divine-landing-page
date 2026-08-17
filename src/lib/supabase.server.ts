@@ -13,8 +13,9 @@ export function getAdminClient(): SupabaseClient {
   if (cached) return cached;
   // URL is a public value; use the Vite-injected constant which is available on
   // both server and client builds. The service role key is a secret from process.env.
-  const url = (import.meta.env.VITE_SUPABASE_URL as string) || process.env.VITE_SUPABASE_URL || "";
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  const url =
+    (import.meta.env["VITE_SUPABASE_URL"] as string) || process.env["VITE_SUPABASE_URL"] || "";
+  const serviceKey = process.env["SUPABASE_SERVICE_ROLE_KEY"] || "";
   if (!url || !serviceKey) {
     throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY or Supabase URL on the server");
   }

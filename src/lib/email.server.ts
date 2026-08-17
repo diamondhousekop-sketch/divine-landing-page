@@ -16,13 +16,13 @@ const BRAND = {
 };
 
 function resendClient(): Resend | null {
-  const key = process.env.RESEND_API_KEY;
+  const key = process.env["RESEND_API_KEY"];
   if (!key) return null;
   return new Resend(key);
 }
 
 function fromAddress(): string {
-  const from = process.env.RESEND_FROM_EMAIL;
+  const from = process.env["RESEND_FROM_EMAIL"];
   // Resend requires a verified sender domain. If not provided, fall back to
   // Resend's shared test sender which works in sandbox mode.
   if (!from || !/@/.test(from) || /gmai\.com$|@gmail\.com$/i.test(from)) {
@@ -32,7 +32,7 @@ function fromAddress(): string {
 }
 
 function siteUrl(): string {
-  return process.env.SITE_URL || "http://localhost:3000";
+  return process.env["SITE_URL"] || "http://localhost:3000";
 }
 
 type OrderLike = {
@@ -114,7 +114,7 @@ export async function sendPaymentConfirmation(order: OrderLike, customerEmail?: 
 }
 
 export async function sendAdminAlert(order: OrderLike) {
-  const to = process.env.ADMIN_ALERT_EMAIL;
+  const to = process.env["ADMIN_ALERT_EMAIL"];
   if (!to) return;
   const html = shell(
     "🔔 नवीन ऑर्डर / New order",
@@ -122,7 +122,11 @@ export async function sendAdminAlert(order: OrderLike) {
      ${orderTable(order)}
      <p style="margin-top:16px;"><a href="${siteUrl()}/admin/orders" style="background:${BRAND.navy};color:${BRAND.goldLight};padding:10px 20px;border-radius:999px;text-decoration:none;font-size:14px;">Open Admin Panel</a></p>`,
   );
-  await send(to, `🔔 New order ${order.order_number} — ₹${order.total_amount} (${order.payment_method.toUpperCase()})`, html);
+  await send(
+    to,
+    `🔔 New order ${order.order_number} — ₹${order.total_amount} (${order.payment_method.toUpperCase()})`,
+    html,
+  );
 }
 
 export async function sendShippingUpdate(order: OrderLike, customerEmail?: string) {

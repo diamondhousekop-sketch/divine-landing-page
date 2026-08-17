@@ -59,11 +59,30 @@ export const FALLBACK_PRODUCT = {
   compare_at_price: 2100,
 } as const;
 
-export const FALLBACK_TESTIMONIALS: Pick<Testimonial, "customer_name" | "customer_city" | "quote">[] = [
-  { customer_name: "राजू पाटील", customer_city: "कोल्हापूर", quote: "दुकानातील अनुभव खूप छान. मनाला शांती मिळाली." },
-  { customer_name: "सुनिता देशमुख", customer_city: "इचलकरंजी", quote: "घरातलं वातावरण आता खूप सकारात्मक वाटतं." },
-  { customer_name: "अमोल कदम", customer_city: "सांगली", quote: "व्यवसायात नवा उत्साह जाणवतोय. धन्यवाद स्वामी." },
-  { customer_name: "प्रिया जाधव", customer_city: "सातारा", quote: "पॅकिंग आणि डिलिव्हरी अगदी सुरक्षित होती." },
+export const FALLBACK_TESTIMONIALS: Pick<
+  Testimonial,
+  "customer_name" | "customer_city" | "quote"
+>[] = [
+  {
+    customer_name: "राजू पाटील",
+    customer_city: "कोल्हापूर",
+    quote: "दुकानातील अनुभव खूप छान. मनाला शांती मिळाली.",
+  },
+  {
+    customer_name: "सुनिता देशमुख",
+    customer_city: "इचलकरंजी",
+    quote: "घरातलं वातावरण आता खूप सकारात्मक वाटतं.",
+  },
+  {
+    customer_name: "अमोल कदम",
+    customer_city: "सांगली",
+    quote: "व्यवसायात नवा उत्साह जाणवतोय. धन्यवाद स्वामी.",
+  },
+  {
+    customer_name: "प्रिया जाधव",
+    customer_city: "सातारा",
+    quote: "पॅकिंग आणि डिलिव्हरी अगदी सुरक्षित होती.",
+  },
 ];
 
 export const FALLBACK_CONTENT = {

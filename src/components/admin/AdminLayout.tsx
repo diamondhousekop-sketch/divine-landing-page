@@ -6,6 +6,7 @@ import {
   Package,
   MessageSquareQuote,
   Settings2,
+  UserCog,
   LogOut,
   Menu,
   X,
@@ -20,6 +21,7 @@ const NAV = [
   { to: "/admin/products", label: "प्रॉडक्ट्स", en: "Products", icon: Package },
   { to: "/admin/testimonials", label: "अनुभव", en: "Testimonials", icon: MessageSquareQuote },
   { to: "/admin/content", label: "कंटेंट", en: "Content & Payments", icon: Settings2 },
+  { to: "/admin/account", label: "अकाउंट", en: "Account", icon: UserCog },
 ] as const;
 
 export function AdminLayout({ title, children }: { title: string; children: ReactNode }) {
@@ -44,7 +46,9 @@ export function AdminLayout({ title, children }: { title: string; children: Reac
   };
 
   const isActive = (to: string, exact?: boolean) =>
-    exact ? location.pathname === to : location.pathname === to || location.pathname.startsWith(to + "/");
+    exact
+      ? location.pathname === to
+      : location.pathname === to || location.pathname.startsWith(to + "/");
 
   const SidebarInner = (
     <div className="flex h-full flex-col bg-navy text-gold-light">

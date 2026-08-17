@@ -80,7 +80,10 @@ function AdminLogin() {
             />
           </div>
           {error && (
-            <p className="rounded-xl bg-destructive/10 px-4 py-2 text-sm text-destructive" data-testid="login-error">
+            <p
+              className="rounded-xl bg-destructive/10 px-4 py-2 text-sm text-destructive"
+              data-testid="login-error"
+            >
               {error}
             </p>
           )}

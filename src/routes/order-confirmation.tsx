@@ -4,9 +4,8 @@ import { GoldSwash } from "@/components/GoldSwash";
 
 export const Route = createFileRoute("/order-confirmation")({
   head: () => ({ meta: [{ title: "धन्यवाद! ऑर्डर नोंदवली | Diamond House" }] }),
-  validateSearch: (search: Record<string, unknown>): { order?: string } => ({
-    order: typeof search.order === "string" ? search.order : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { order?: string } =>
+    typeof search["order"] === "string" ? { order: search["order"] } : {},
   component: OrderConfirmation,
 });
 
@@ -22,7 +21,10 @@ function OrderConfirmation() {
         className="pointer-events-none absolute inset-0 -z-10"
         style={{ background: "var(--gradient-glow)", opacity: 0.4 }}
       />
-      <div className="surface-card w-full max-w-lg p-8 text-center md:p-10" data-testid="confirmation-card">
+      <div
+        className="surface-card w-full max-w-lg p-8 text-center md:p-10"
+        data-testid="confirmation-card"
+      >
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--whatsapp)_18%,transparent)]">
           <CheckCircle2 className="h-9 w-9 text-[var(--whatsapp)]" />
         </div>
@@ -35,7 +37,10 @@ function OrderConfirmation() {
         {order && (
           <div className="mt-6 rounded-2xl border border-accent/40 bg-card px-5 py-4">
             <p className="deva text-xs text-muted-foreground">ऑर्डर क्रमांक</p>
-            <p className="font-display text-2xl font-bold text-navy" data-testid="confirmation-order-number">
+            <p
+              className="font-display text-2xl font-bold text-navy"
+              data-testid="confirmation-order-number"
+            >
               {order}
             </p>
           </div>

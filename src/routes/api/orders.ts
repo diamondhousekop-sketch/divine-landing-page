@@ -13,7 +13,10 @@ const OrderInput = z.object({
     .trim()
     .regex(/^(\+91[\s-]?)?[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number"),
   customer_address: z.string().trim().min(6).max(600),
-  customer_pincode: z.string().trim().regex(/^\d{6}$/, "Enter a valid 6-digit pincode"),
+  customer_pincode: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, "Enter a valid 6-digit pincode"),
   quantity: z.number().int().min(1).max(10).default(1),
   payment_method: z.enum(["online", "cod"]),
   product_id: z.string().uuid().optional(),
@@ -44,7 +47,10 @@ export const Route = createFileRoute("/api/orders")({
           const admin = getAdminClient();
 
           // Re-fetch product & price server-side — NEVER trust a client-sent price.
-          let productQuery = admin.from("products").select("id,price,is_active,stock_quantity").eq("is_active", true);
+          let productQuery = admin
+            .from("products")
+            .select("id,price,is_active,stock_quantity")
+            .eq("is_active", true);
           productQuery = input.product_id
             ? productQuery.eq("id", input.product_id)
             : productQuery.order("created_at", { ascending: true });
