@@ -1,24 +1,494 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { Reveal } from "@/components/Reveal";
+import { GoldSwash } from "@/components/GoldSwash";
+import templeBg from "@/assets/temple-bg.jpg";
+import stoneMacro from "@/assets/stone-macro.jpg";
+import stoneHand from "@/assets/stone-hand.jpg";
+import stoneBox from "@/assets/stone-box.jpg";
+import family from "@/assets/family.jpg";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "इच्छापूर्ती लकी स्टोन | Diamond House, Kolhapur" },
+      {
+        name: "description",
+        content:
+          "श्री स्वामी समर्थ आशीर्वादित इच्छापूर्ती लकी स्टोन — कोल्हापूरचे २५+ वर्षांचे विश्वासू दुकान. सिद्ध शुभरत्न, सुरक्षित डिलिव्हरी, थेट संपर्क.",
+      },
+      { property: "og:title", content: "इच्छापूर्ती लकी स्टोन | Diamond House, Kolhapur" },
+      {
+        property: "og:description",
+        content:
+          "Kolhapur's trusted Icchapurti Lucky Stone — 25+ years of genuine blessings from Diamond House.",
+      },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+const PHONE = "96 57 130 131";
+const PHONE_TEL = "tel:+919657130131";
+
+const problems = [
+  { icon: "📉", text: "व्यवसायात अडथळे येतायत?" },
+  { icon: "🧗", text: "नोकरीत प्रगती थांबलीये?" },
+  { icon: "💍", text: "लग्न किंवा नात्यात विलंब?" },
+  { icon: "🌫️", text: "मनात सतत अस्वस्थता, अशांती?" },
+];
+
+const steps = [
+  { icon: "🌙", title: "दुधात ठेवा", desc: "रात्री शुद्ध दुधात रत्न ठेवा." },
+  { icon: "🌅", title: "सूर्योदयी पूजा करा", desc: "सकाळी स्वच्छ करून पूजेत ठेवा." },
+  { icon: "🙏", title: "सदैव जवळ ठेवा", desc: "श्रद्धेने खिशात किंवा पर्समध्ये ठेवा." },
+];
+
+const testimonials = [
+  { name: "राजू पाटील", city: "कोल्हापूर", quote: "दुकानातील अनुभव खूप छान. मनाला शांती मिळाली." },
+  { name: "सुनिता देशमुख", city: "इचलकरंजी", quote: "घरातलं वातावरण आता खूप सकारात्मक वाटतं." },
+  { name: "अमोल कदम", city: "सांगली", quote: "व्यवसायात नवा उत्साह जाणवतोय. धन्यवाद स्वामी." },
+  { name: "प्रिया जाधव", city: "सातारा", quote: "पॅकिंग आणि डिलिव्हरी अगदी सुरक्षित होती." },
+];
+
+const included = [
+  "शास्त्रोक्त पद्धतीने सिद्ध केलेले शुभरत्न",
+  "लाल मखमली पोटली + पवित्र धागा",
+  "पूजा विधीची मराठी माहिती पुस्तिका",
+  "Diamond House चे अस्सलतेचे प्रमाणपत्र",
+  "सुरक्षित पॅकिंग व घरपोच डिलिव्हरी",
+];
+
+const faqs = [
+  {
+    q: "रत्न असली आहे का?",
+    a: "होय. Diamond House, कोल्हापूर हे २५+ वर्षांपासून याच ठिकाणी कार्यरत आहे. प्रत्येक शुभरत्नासोबत आमचे अस्सलतेचे प्रमाणपत्र दिले जाते आणि तुम्ही दुकानात येऊन प्रत्यक्ष पाहूही शकता.",
+  },
+  {
+    q: "रिफंड मिळेल का?",
+    a: "शुभरत्न हे पूजन व सिद्ध केलेले वस्तू असल्याने ते परत घेतले जात नाही. मात्र ऑर्डर करण्यापूर्वी आम्ही फोनवर सर्व शंकांचे समाधान करतो — 96 57 130 131.",
+  },
+  {
+    q: "डिलिव्हरी किती दिवसात?",
+    a: "महाराष्ट्रात साधारण ३–५ कामकाजाच्या दिवसांत. कोल्हापूर विभागात अनेकदा २ दिवसांत पोहोच होते. पाठवल्यावर तुम्हाला फोनवर कळवले जाते.",
+  },
+  {
+    q: "कोणासाठी योग्य आहे?",
+    a: "श्रद्धा असणाऱ्या कोणत्याही स्त्री-पुरुषासाठी. हे मन:शांती, सकारात्मक ऊर्जा व आत्मविश्वासासाठी श्रद्धेने वापरले जाते; कोणताही वैद्यकीय किंवा कायदेशीर दावा आम्ही करत नाही.",
+  },
+  {
+    q: "पेमेंट सुरक्षित आहे का?",
+    a: "होय. Cash on Delivery तसेच UPI हे दोन्ही पर्याय उपलब्ध आहेत. तुम्ही थेट दुकानातही येऊन खरेदी करू शकता.",
+  },
+];
+
+function CtaButton({
+  children,
+  className = "",
+  href = "#order",
+}: {
+  children: React.ReactNode;
+  className?: string;
+  href?: string;
+}) {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
+    <a
+      href={href}
+      className={`shimmer cta-gold-pulse relative inline-flex min-h-[52px] items-center justify-center overflow-hidden rounded-full bg-navy px-8 text-base font-semibold tracking-wide text-gold-light transition-transform duration-200 hover:scale-[1.03] ${className}`}
     >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+      <span className="relative z-10 deva">{children}</span>
+    </a>
+  );
+}
+
+function SectionTitle({ children, sub }: { children: React.ReactNode; sub?: string }) {
+  return (
+    <div className="text-center">
+      <h2 className="deva text-3xl leading-tight font-normal text-primary md:text-5xl">
+        {children}
+      </h2>
+      <GoldSwash className="mt-3" />
+      {sub ? <p className="mt-3 text-sm text-muted-foreground md:text-base">{sub}</p> : null}
     </div>
+  );
+}
+
+function Index() {
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+  return (
+    <main className="relative overflow-x-hidden pb-24 md:pb-0">
+      {/* HERO */}
+      <section className="relative isolate overflow-hidden px-5 pt-14 pb-16 md:pt-20 md:pb-24">
+        <img
+          src={templeBg}
+          alt=""
+          aria-hidden="true"
+          width={1600}
+          height={1008}
+          className="pointer-events-none absolute inset-0 -z-20 h-full w-full object-cover opacity-25"
+        />
+        <div
+          className="pointer-events-none absolute inset-0 -z-10"
+          style={{
+            background:
+              "linear-gradient(180deg, color-mix(in oklab, var(--ivory) 82%, transparent), var(--ivory) 78%), var(--gradient-glow)",
+          }}
+        />
+        <div className="mx-auto max-w-4xl text-center">
+          <Reveal>
+            <p className="deva inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-xs tracking-wide text-primary md:text-sm">
+              ॐ श्री स्वामी समर्थ · Diamond House, कोल्हापूर
+            </p>
+            <h1 className="deva mt-6 text-[2.5rem] leading-[1.1] font-normal text-primary md:text-7xl">
+              स्वामींचा आशीर्वाद,
+              <br />
+              <span className="text-gold-gradient">तुमच्या हातात</span>
+            </h1>
+            <GoldSwash className="mt-4 w-56" />
+            <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-lg">
+              Kolhapur's Trusted Icchapurti Lucky Stone — 25+ Years of Genuine Blessings
+            </p>
+          </Reveal>
+
+          <Reveal delay={120} className="mt-9">
+            <div
+              className="group relative mx-auto aspect-video w-full max-w-2xl overflow-hidden rounded-3xl border-2 border-accent/60"
+              style={{ boxShadow: "var(--shadow-gold)" }}
+            >
+              <img
+                src={stoneMacro}
+                alt="इच्छापूर्ती लकी स्टोन — मखमली पार्श्वभूमीवर"
+                width={1200}
+                height={1200}
+                className="h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-[color-mix(in_oklab,var(--maroon)_35%,transparent)]" />
+              <button
+                type="button"
+                aria-label="व्हिडिओ पहा"
+                className="absolute inset-0 flex items-center justify-center"
+              >
+                <span className="flex h-16 w-16 items-center justify-center rounded-full bg-ivory/90 text-2xl text-primary shadow-lg transition-transform duration-200 group-hover:scale-110 md:h-20 md:w-20">
+                  ▶
+                </span>
+              </button>
+              <span className="deva absolute bottom-3 left-4 rounded-full bg-navy/80 px-3 py-1 text-xs text-gold-light">
+                दुकानातील प्रत्यक्ष व्हिडिओ
+              </span>
+            </div>
+          </Reveal>
+
+          <Reveal delay={200} className="mt-9">
+            <CtaButton className="px-10 text-lg">आत्ताच मागवा</CtaButton>
+            <p className="deva mt-3 text-xs text-muted-foreground">
+              मर्यादित स्टॉक — फक्त कोल्हापूर विभागासाठी
+            </p>
+            <ul className="mx-auto mt-7 grid max-w-2xl grid-cols-2 gap-3 md:grid-cols-4">
+              {[
+                ["🏠", "कोल्हापूर स्थित दुकान"],
+                ["✅", "१००% असली"],
+                ["🚚", "सुरक्षित डिलिव्हरी"],
+                ["📞", "थेट संपर्क"],
+              ].map(([icon, label]) => (
+                <li
+                  key={label}
+                  className="surface-card deva flex flex-col items-center gap-1 px-3 py-3 text-xs text-foreground md:text-sm"
+                >
+                  <span className="text-lg">{icon}</span>
+                  {label}
+                </li>
+              ))}
+            </ul>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* TRUST STRIP */}
+      <section className="bg-navy px-5 py-4">
+        <div className="mx-auto flex max-w-5xl flex-col items-center justify-center gap-2 text-center md:flex-row md:gap-4">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full border border-gold text-xs text-gold">
+            ✓
+          </span>
+          <p className="deva text-sm text-gold-light md:text-base">
+            श्री स्वामी समर्थ आशीर्वादित <span className="text-gold">|</span> महालक्ष्मी
+            मंदिरामागे, जोतिबा रोड, कोल्हापूर
+          </p>
+        </div>
+      </section>
+
+      {/* PROBLEMS */}
+      <section className="px-5 py-16 md:py-24">
+        <div className="mx-auto max-w-5xl">
+          <Reveal>
+            <SectionTitle sub="श्रद्धेने पाहिल्यास, प्रत्येक अडथळ्यामागे एक ऊर्जा असते.">
+              आयुष्यात या समस्या जाणवतायत का?
+            </SectionTitle>
+          </Reveal>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {problems.map((p, i) => (
+              <Reveal key={p.text} delay={i * 90}>
+                <div className="surface-card h-full px-5 py-7 text-center transition-transform duration-200 hover:-translate-y-1">
+                  <span className="text-3xl">{p.icon}</span>
+                  <p className="deva mt-4 text-base leading-relaxed text-foreground">{p.text}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SOLUTION */}
+      <section className="relative px-5 py-16 md:py-24">
+        <div
+          className="pointer-events-none absolute inset-0 -z-10"
+          style={{ background: "var(--gradient-glow)", opacity: 0.35 }}
+        />
+        <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2">
+          <Reveal>
+            <div
+              className="overflow-hidden rounded-3xl border border-accent/50"
+              style={{ boxShadow: "var(--shadow-gold)" }}
+            >
+              <img
+                src={stoneHand}
+                alt="सिद्ध शुभरत्न, लाल मखमली पोटली आणि पवित्र धाग्यासह"
+                loading="lazy"
+                width={1008}
+                height={1008}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          </Reveal>
+          <Reveal delay={120}>
+            <h2 className="deva text-3xl leading-tight text-primary md:text-4xl">
+              सिद्ध शुभरत्न — शास्त्रोक्त पद्धतीने सिद्ध केलेले खरे रत्न
+            </h2>
+            <div className="mt-4 h-px w-24 bg-accent" />
+            <p className="deva mt-5 text-base leading-loose text-muted-foreground">
+              प्रत्येक शुभरत्न आमच्या कोल्हापूरच्या दुकानात निवडले जाते आणि गुरुवारी विधिवत पूजन
+              करून, मंत्रोच्चारासह सिद्ध केले जाते. कोणतीही घाई नाही, कोणताही शॉर्टकट नाही — फक्त
+              पिढ्यानपिढ्या चालत आलेली पद्धत आणि स्वामींवरची श्रद्धा. गेली २५ वर्षे हजारो कुटुंबांनी
+              हाच विश्वास आमच्यावर ठेवला आहे.
+            </p>
+            <ol className="mt-8 grid gap-3 sm:grid-cols-3">
+              {steps.map((s, i) => (
+                <li key={s.title} className="surface-card px-4 py-5">
+                  <span className="deva text-xs text-accent">पायरी {i + 1}</span>
+                  <div className="mt-1 text-2xl">{s.icon}</div>
+                  <p className="deva mt-2 text-base font-medium text-foreground">{s.title}</p>
+                  <p className="deva mt-1 text-xs text-muted-foreground">{s.desc}</p>
+                </li>
+              ))}
+            </ol>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* TESTIMONIALS */}
+      <section className="px-0 py-16 md:py-24">
+        <div className="mx-auto max-w-6xl px-5">
+          <Reveal>
+            <SectionTitle sub="कोल्हापूर आणि आसपासच्या कुटुंबांचे मनापासून शब्द">
+              आमच्या ग्राहकांचे अनुभव
+            </SectionTitle>
+          </Reveal>
+        </div>
+        <Reveal delay={100}>
+          <div className="mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-4 md:justify-center md:px-8">
+            {testimonials.map((t) => (
+              <article
+                key={t.name}
+                className="surface-card w-[268px] shrink-0 snap-center overflow-hidden p-0 md:w-[300px]"
+              >
+                <div className="relative aspect-[4/3] border-b border-accent/40">
+                  <img
+                    src={family}
+                    alt={`${t.name} यांचा अनुभव`}
+                    loading="lazy"
+                    width={1200}
+                    height={800}
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-[color-mix(in_oklab,var(--maroon)_25%,transparent)]">
+                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-ivory/90 text-primary">
+                      ▶
+                    </span>
+                  </div>
+                </div>
+                <div className="p-5">
+                  <div className="text-sm tracking-widest text-accent">★★★★★</div>
+                  <p className="deva mt-2 text-sm leading-relaxed text-foreground">“{t.quote}”</p>
+                  <p className="deva mt-3 text-xs text-muted-foreground">
+                    {t.name}, {t.city}
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </Reveal>
+      </section>
+
+      {/* PRODUCT + PRICING */}
+      <section id="order" className="px-5 py-16 md:py-24">
+        <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-2">
+          <Reveal>
+            <div
+              className="overflow-hidden rounded-3xl border border-accent/50"
+              style={{ boxShadow: "var(--shadow-gold)" }}
+            >
+              <img
+                src={stoneBox}
+                alt="इच्छापूर्ती लकी स्टोन प्रमाणपत्रासह भेट पेटीत"
+                loading="lazy"
+                width={1008}
+                height={1008}
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <div className="mt-4 grid grid-cols-3 gap-3">
+              {[stoneMacro, stoneHand, family].map((src, i) => (
+                <img
+                  key={i}
+                  src={src}
+                  alt="इच्छापूर्ती लकी स्टोन — अन्य दृश्य"
+                  loading="lazy"
+                  width={600}
+                  height={600}
+                  className="aspect-square w-full rounded-xl border border-border object-cover"
+                />
+              ))}
+            </div>
+          </Reveal>
+
+          <Reveal delay={120}>
+            <h2 className="deva text-3xl leading-tight text-primary md:text-4xl">
+              इच्छापूर्ती लकी स्टोन
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Diamond House · Kolhapur · Since 1999
+            </p>
+            <div className="mt-6 flex items-end gap-3">
+              <span className="font-display text-5xl font-bold text-navy md:text-6xl">₹1,100</span>
+              <span className="mb-2 text-lg text-muted-foreground line-through">₹2,100</span>
+              <span className="deva mb-2 rounded-full bg-primary px-3 py-1 text-xs text-primary-foreground">
+                ४८% सवलत
+              </span>
+            </div>
+            <p className="deva mt-2 text-sm text-primary">
+              मर्यादित स्टॉक — फक्त कोल्हापूर विभागासाठी
+            </p>
+
+            <h3 className="deva mt-8 text-xl text-foreground">काय समाविष्ट आहे</h3>
+            <ul className="mt-4 space-y-3">
+              {included.map((item) => (
+                <li key={item} className="deva flex items-start gap-3 text-sm text-foreground">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent text-[11px] text-accent-foreground">
+                    ✓
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              <CtaButton className="px-10 text-lg">आत्ताच मागवा</CtaButton>
+              <a
+                href={PHONE_TEL}
+                className="deva inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-[var(--whatsapp)] px-6 text-sm font-medium text-[var(--whatsapp)] transition-colors hover:bg-[color-mix(in_oklab,var(--whatsapp)_12%,transparent)]"
+              >
+                📞 {PHONE}
+              </a>
+            </div>
+            <p className="deva mt-3 text-xs text-muted-foreground">
+              Cash on Delivery व UPI उपलब्ध · संपूर्ण महाराष्ट्रात डिलिव्हरी
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="px-5 py-16 md:py-24">
+        <div className="mx-auto max-w-3xl">
+          <Reveal>
+            <SectionTitle>सामान्य प्रश्न</SectionTitle>
+          </Reveal>
+          <div className="mt-10 space-y-3">
+            {faqs.map((f, i) => (
+              <Reveal key={f.q} delay={i * 60}>
+                <div className="surface-card overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                    aria-expanded={openFaq === i}
+                    className="deva flex min-h-[56px] w-full items-center justify-between gap-4 px-5 py-4 text-left text-base text-foreground"
+                  >
+                    {f.q}
+                    <span className="text-accent">{openFaq === i ? "−" : "+"}</span>
+                  </button>
+                  {openFaq === i && (
+                    <p className="deva border-t border-border px-5 py-4 text-sm leading-loose text-muted-foreground">
+                      {f.a}
+                    </p>
+                  )}
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="bg-navy px-5 py-14 text-gold-light">
+        <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-3">
+          <div>
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full border border-gold text-lg">
+                🪔
+              </span>
+              <div>
+                <p className="font-display text-lg text-gold">Diamond House</p>
+                <p className="deva text-xs opacity-80">श्री स्वामी समर्थ आशीर्वादित</p>
+              </div>
+            </div>
+            <p className="deva mt-4 text-sm leading-relaxed opacity-90">
+              महालक्ष्मी मंदिरामागे, जोतिबा रोड,
+              <br />
+              कोल्हापूर, महाराष्ट्र
+            </p>
+          </div>
+          <div>
+            <p className="deva text-sm font-medium text-gold">संपर्क</p>
+            <a href={PHONE_TEL} className="mt-3 block text-lg tracking-wide">
+              📞 {PHONE}
+            </a>
+            <p className="deva mt-2 text-xs opacity-80">
+              सकाळी १० ते रात्री ८ · गुरुवारी विशेष पूजन
+            </p>
+          </div>
+          <div>
+            <p className="deva text-sm font-medium text-gold">महत्त्वाची सूचना</p>
+            <p className="deva mt-3 text-xs leading-relaxed opacity-70">
+              शुभरत्न न लाभल्यास किंवा इतर कोणत्याही कारणास्तव परत घेतले जाणार नाही. हे उत्पादन
+              श्रद्धा व सकारात्मक ऊर्जेसाठी आहे; कोणताही वैद्यकीय अथवा कायदेशीर दावा केला जात नाही.
+            </p>
+          </div>
+        </div>
+        <p className="deva mt-10 text-center text-xs opacity-60">
+          © {new Date().getFullYear()} Diamond House, कोल्हापूर. सर्व हक्क राखीव.
+        </p>
+      </footer>
+
+      {/* STICKY MOBILE CTA */}
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/95 px-4 py-3 backdrop-blur md:hidden">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="font-display text-xl font-bold text-navy">₹1,100</p>
+            <p className="text-[11px] text-muted-foreground line-through">₹2,100</p>
+          </div>
+          <CtaButton className="flex-1 px-6">आत्ताच मागवा</CtaButton>
+        </div>
+      </div>
+    </main>
   );
 }
