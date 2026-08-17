@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Reveal } from "@/components/Reveal";
 import { GoldSwash } from "@/components/GoldSwash";
+import { getActiveProduct, getTestimonials, getSiteContent } from "@/lib/queries";
 import templeBg from "@/assets/temple-bg.jpg";
 import stoneMacro from "@/assets/stone-macro.jpg";
 import stoneHand from "@/assets/stone-hand.jpg";
@@ -25,6 +26,15 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
+  // DB-driven: product price, testimonials and editable site content come from Supabase.
+  loader: async () => {
+    const [product, testimonials, content] = await Promise.all([
+      getActiveProduct(),
+      getTestimonials(),
+      getSiteContent(),
+    ]);
+    return { product, testimonials, content };
+  },
   component: Index,
 });
 
@@ -42,13 +52,6 @@ const steps = [
   { icon: "🌙", title: "दुधात ठेवा", desc: "रात्री शुद्ध दुधात रत्न ठेवा." },
   { icon: "🌅", title: "सूर्योदयी पूजा करा", desc: "सकाळी स्वच्छ करून पूजेत ठेवा." },
   { icon: "🙏", title: "सदैव जवळ ठेवा", desc: "श्रद्धेने खिशात किंवा पर्समध्ये ठेवा." },
-];
-
-const testimonials = [
-  { name: "राजू पाटील", city: "कोल्हापूर", quote: "दुकानातील अनुभव खूप छान. मनाला शांती मिळाली." },
-  { name: "सुनिता देशमुख", city: "इचलकरंजी", quote: "घरातलं वातावरण आता खूप सकारात्मक वाटतं." },
-  { name: "अमोल कदम", city: "सांगली", quote: "व्यवसायात नवा उत्साह जाणवतोय. धन्यवाद स्वामी." },
-  { name: "प्रिया जाधव", city: "सातारा", quote: "पॅकिंग आणि डिलिव्हरी अगदी सुरक्षित होती." },
 ];
 
 const included = [
@@ -85,19 +88,20 @@ const faqs = [
 function CtaButton({
   children,
   className = "",
-  href = "#order",
+  to = "/checkout",
 }: {
   children: React.ReactNode;
   className?: string;
-  href?: string;
+  to?: string;
 }) {
   return (
-    <a
-      href={href}
+    <Link
+      to={to}
+      data-testid="cta-order-button"
       className={`shimmer cta-gold-pulse relative inline-flex min-h-[52px] items-center justify-center overflow-hidden rounded-full bg-navy px-8 text-base font-semibold tracking-wide text-gold-light transition-transform duration-200 hover:scale-[1.03] ${className}`}
     >
       <span className="relative z-10 deva">{children}</span>
-    </a>
+    </Link>
   );
 }
 
@@ -114,10 +118,28 @@ function SectionTitle({ children, sub }: { children: React.ReactNode; sub?: stri
 }
 
 function Index() {
+  const { product, testimonials, content } = Route.useLoaderData();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+  const price = Number(product.price);
+  const compare = product.compare_at_price ? Number(product.compare_at_price) : null;
+  const discount = compare && compare > price ? Math.round((1 - price / compare) * 100) : null;
+
+  // Split headline at the last comma so the tail renders in gold (matches original).
+  const headline = content.hero_headline || "स्वामींचा आशीर्वाद, तुमच्या हातात";
+  const ci = headline.lastIndexOf(",");
+  const headHead = ci > -1 ? headline.slice(0, ci + 1) : headline;
+  const headTail = ci > -1 ? headline.slice(ci + 1).trim() : "";
 
   return (
     <main className="relative overflow-x-hidden pb-24 md:pb-0">
+      {/* ANNOUNCEMENT BAR */}
+      {content.announcement && (
+        <div className="bg-maroon px-4 py-2 text-center" data-testid="announcement-bar">
+          <p className="deva text-xs text-primary-foreground md:text-sm">{content.announcement}</p>
+        </div>
+      )}
+
       {/* HERO */}
       <section className="relative isolate overflow-hidden px-5 pt-14 pb-16 md:pt-20 md:pb-24">
         <img
@@ -138,16 +160,21 @@ function Index() {
         <div className="mx-auto max-w-4xl text-center">
           <Reveal>
             <p className="deva inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-xs tracking-wide text-primary md:text-sm">
-              ॐ श्री स्वामी समर्थ · Diamond House, कोल्हापूर
+              {content.hero_badge || "ॐ श्री स्वामी समर्थ · Diamond House, कोल्हापूर"}
             </p>
             <h1 className="deva mt-6 text-[2.5rem] leading-[1.1] font-normal text-primary md:text-7xl">
-              स्वामींचा आशीर्वाद,
-              <br />
-              <span className="text-gold-gradient">तुमच्या हातात</span>
+              {headHead}
+              {headTail && (
+                <>
+                  <br />
+                  <span className="text-gold-gradient">{headTail}</span>
+                </>
+              )}
             </h1>
             <GoldSwash className="mt-4 w-56" />
             <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-lg">
-              Kolhapur's Trusted Icchapurti Lucky Stone — 25+ Years of Genuine Blessings
+              {content.hero_subheadline ||
+                "Kolhapur's Trusted Icchapurti Lucky Stone — 25+ Years of Genuine Blessings"}
             </p>
           </Reveal>
 
@@ -295,16 +322,16 @@ function Index() {
           </Reveal>
         </div>
         <Reveal delay={100}>
-          <div className="mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-4 md:justify-center md:px-8">
-            {testimonials.map((t) => (
+          <div className="mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-4 md:justify-center md:px-8" data-testid="testimonials-list">
+            {testimonials.map((t, i) => (
               <article
-                key={t.name}
+                key={`${t.customer_name}-${i}`}
                 className="surface-card w-[268px] shrink-0 snap-center overflow-hidden p-0 md:w-[300px]"
               >
                 <div className="relative aspect-[4/3] border-b border-accent/40">
                   <img
                     src={family}
-                    alt={`${t.name} यांचा अनुभव`}
+                    alt={`${t.customer_name} यांचा अनुभव`}
                     loading="lazy"
                     width={1200}
                     height={800}
@@ -320,7 +347,7 @@ function Index() {
                   <div className="text-sm tracking-widest text-accent">★★★★★</div>
                   <p className="deva mt-2 text-sm leading-relaxed text-foreground">“{t.quote}”</p>
                   <p className="deva mt-3 text-xs text-muted-foreground">
-                    {t.name}, {t.city}
+                    {t.customer_name}{t.customer_city ? `, ${t.customer_city}` : ""}
                   </p>
                 </div>
               </article>
@@ -363,17 +390,21 @@ function Index() {
 
           <Reveal delay={120}>
             <h2 className="deva text-3xl leading-tight text-primary md:text-4xl">
-              इच्छापूर्ती लकी स्टोन
+              {product.name || "इच्छापूर्ती लकी स्टोन"}
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
               Diamond House · Kolhapur · Since 1999
             </p>
             <div className="mt-6 flex items-end gap-3">
-              <span className="font-display text-5xl font-bold text-navy md:text-6xl">₹1,100</span>
-              <span className="mb-2 text-lg text-muted-foreground line-through">₹2,100</span>
-              <span className="deva mb-2 rounded-full bg-primary px-3 py-1 text-xs text-primary-foreground">
-                ४८% सवलत
-              </span>
+              <span className="font-display text-5xl font-bold text-navy md:text-6xl" data-testid="product-price">₹{price.toLocaleString("en-IN")}</span>
+              {compare && (
+                <span className="mb-2 text-lg text-muted-foreground line-through">₹{compare.toLocaleString("en-IN")}</span>
+              )}
+              {discount && (
+                <span className="deva mb-2 rounded-full bg-primary px-3 py-1 text-xs text-primary-foreground">
+                  {discount}% सवलत
+                </span>
+              )}
             </div>
             <p className="deva mt-2 text-sm text-primary">
               मर्यादित स्टॉक — फक्त कोल्हापूर विभागासाठी
@@ -483,8 +514,8 @@ function Index() {
       <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/95 px-4 py-3 backdrop-blur md:hidden">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="font-display text-xl font-bold text-navy">₹1,100</p>
-            <p className="text-[11px] text-muted-foreground line-through">₹2,100</p>
+            <p className="font-display text-xl font-bold text-navy">₹{price.toLocaleString("en-IN")}</p>
+            {compare && <p className="text-[11px] text-muted-foreground line-through">₹{compare.toLocaleString("en-IN")}</p>}
           </div>
           <CtaButton className="flex-1 px-6">आत्ताच मागवा</CtaButton>
         </div>

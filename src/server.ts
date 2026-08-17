@@ -1,5 +1,12 @@
 import "./lib/error-capture";
 
+// supabase-js (realtime) expects a global WebSocket. Node < 22 doesn't provide
+// one, so polyfill it on the server before any Supabase client is constructed.
+import WS from "ws";
+if (typeof (globalThis as { WebSocket?: unknown }).WebSocket === "undefined") {
+  (globalThis as unknown as { WebSocket: unknown }).WebSocket = WS;
+}
+
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 

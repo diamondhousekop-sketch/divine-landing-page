@@ -10,33 +10,271 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as OrderConfirmationRouteImport } from './routes/order-confirmation'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminContentRouteImport } from './routes/admin/content'
+import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
+import { Route as AdminProductsRouteImport } from './routes/admin/products'
+import { Route as AdminTestimonialsRouteImport } from './routes/admin/testimonials'
+import { Route as ApiConfigRouteImport } from './routes/api/config'
+import { Route as ApiOrdersRouteImport } from './routes/api/orders'
+import { Route as ApiAdminContentRouteImport } from './routes/api/admin/content'
+import { Route as ApiAdminOrdersRouteImport } from './routes/api/admin/orders'
+import { Route as ApiAdminProductsRouteImport } from './routes/api/admin/products'
+import { Route as ApiAdminSettingsRouteImport } from './routes/api/admin/settings'
+import { Route as ApiAdminTestimonialsRouteImport } from './routes/api/admin/testimonials'
+import { Route as ApiPaymentCreateRouteImport } from './routes/api/payment/create'
+import { Route as ApiPaymentVerifyRouteImport } from './routes/api/payment/verify'
+import { Route as ApiWebhookRazorpayRouteImport } from './routes/api/webhook/razorpay'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrderConfirmationRoute = OrderConfirmationRouteImport.update({
+  id: '/order-confirmation',
+  path: '/order-confirmation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminContentRoute = AdminContentRouteImport.update({
+  id: '/admin/content',
+  path: '/admin/content',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin/login',
+  path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminOrdersRoute = AdminOrdersRouteImport.update({
+  id: '/admin/orders',
+  path: '/admin/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminProductsRoute = AdminProductsRouteImport.update({
+  id: '/admin/products',
+  path: '/admin/products',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTestimonialsRoute = AdminTestimonialsRouteImport.update({
+  id: '/admin/testimonials',
+  path: '/admin/testimonials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiConfigRoute = ApiConfigRouteImport.update({
+  id: '/api/config',
+  path: '/api/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOrdersRoute = ApiOrdersRouteImport.update({
+  id: '/api/orders',
+  path: '/api/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminContentRoute = ApiAdminContentRouteImport.update({
+  id: '/api/admin/content',
+  path: '/api/admin/content',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminOrdersRoute = ApiAdminOrdersRouteImport.update({
+  id: '/api/admin/orders',
+  path: '/api/admin/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminProductsRoute = ApiAdminProductsRouteImport.update({
+  id: '/api/admin/products',
+  path: '/api/admin/products',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminSettingsRoute = ApiAdminSettingsRouteImport.update({
+  id: '/api/admin/settings',
+  path: '/api/admin/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminTestimonialsRoute = ApiAdminTestimonialsRouteImport.update({
+  id: '/api/admin/testimonials',
+  path: '/api/admin/testimonials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPaymentCreateRoute = ApiPaymentCreateRouteImport.update({
+  id: '/api/payment/create',
+  path: '/api/payment/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPaymentVerifyRoute = ApiPaymentVerifyRouteImport.update({
+  id: '/api/payment/verify',
+  path: '/api/payment/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhookRazorpayRoute = ApiWebhookRazorpayRouteImport.update({
+  id: '/api/webhook/razorpay',
+  path: '/api/webhook/razorpay',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/checkout': typeof CheckoutRoute
+  '/order-confirmation': typeof OrderConfirmationRoute
+  '/admin/content': typeof AdminContentRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/orders': typeof AdminOrdersRoute
+  '/admin/products': typeof AdminProductsRoute
+  '/admin/testimonials': typeof AdminTestimonialsRoute
+  '/api/config': typeof ApiConfigRoute
+  '/api/orders': typeof ApiOrdersRoute
+  '/admin/': typeof AdminIndexRoute
+  '/api/admin/content': typeof ApiAdminContentRoute
+  '/api/admin/orders': typeof ApiAdminOrdersRoute
+  '/api/admin/products': typeof ApiAdminProductsRoute
+  '/api/admin/settings': typeof ApiAdminSettingsRoute
+  '/api/admin/testimonials': typeof ApiAdminTestimonialsRoute
+  '/api/payment/create': typeof ApiPaymentCreateRoute
+  '/api/payment/verify': typeof ApiPaymentVerifyRoute
+  '/api/webhook/razorpay': typeof ApiWebhookRazorpayRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/checkout': typeof CheckoutRoute
+  '/order-confirmation': typeof OrderConfirmationRoute
+  '/admin/content': typeof AdminContentRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/orders': typeof AdminOrdersRoute
+  '/admin/products': typeof AdminProductsRoute
+  '/admin/testimonials': typeof AdminTestimonialsRoute
+  '/api/config': typeof ApiConfigRoute
+  '/api/orders': typeof ApiOrdersRoute
+  '/admin': typeof AdminIndexRoute
+  '/api/admin/content': typeof ApiAdminContentRoute
+  '/api/admin/orders': typeof ApiAdminOrdersRoute
+  '/api/admin/products': typeof ApiAdminProductsRoute
+  '/api/admin/settings': typeof ApiAdminSettingsRoute
+  '/api/admin/testimonials': typeof ApiAdminTestimonialsRoute
+  '/api/payment/create': typeof ApiPaymentCreateRoute
+  '/api/payment/verify': typeof ApiPaymentVerifyRoute
+  '/api/webhook/razorpay': typeof ApiWebhookRazorpayRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/checkout': typeof CheckoutRoute
+  '/order-confirmation': typeof OrderConfirmationRoute
+  '/admin/content': typeof AdminContentRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/orders': typeof AdminOrdersRoute
+  '/admin/products': typeof AdminProductsRoute
+  '/admin/testimonials': typeof AdminTestimonialsRoute
+  '/api/config': typeof ApiConfigRoute
+  '/api/orders': typeof ApiOrdersRoute
+  '/admin/': typeof AdminIndexRoute
+  '/api/admin/content': typeof ApiAdminContentRoute
+  '/api/admin/orders': typeof ApiAdminOrdersRoute
+  '/api/admin/products': typeof ApiAdminProductsRoute
+  '/api/admin/settings': typeof ApiAdminSettingsRoute
+  '/api/admin/testimonials': typeof ApiAdminTestimonialsRoute
+  '/api/payment/create': typeof ApiPaymentCreateRoute
+  '/api/payment/verify': typeof ApiPaymentVerifyRoute
+  '/api/webhook/razorpay': typeof ApiWebhookRazorpayRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/checkout'
+    | '/order-confirmation'
+    | '/admin/content'
+    | '/admin/login'
+    | '/admin/orders'
+    | '/admin/products'
+    | '/admin/testimonials'
+    | '/api/config'
+    | '/api/orders'
+    | '/admin/'
+    | '/api/admin/content'
+    | '/api/admin/orders'
+    | '/api/admin/products'
+    | '/api/admin/settings'
+    | '/api/admin/testimonials'
+    | '/api/payment/create'
+    | '/api/payment/verify'
+    | '/api/webhook/razorpay'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/checkout'
+    | '/order-confirmation'
+    | '/admin/content'
+    | '/admin/login'
+    | '/admin/orders'
+    | '/admin/products'
+    | '/admin/testimonials'
+    | '/api/config'
+    | '/api/orders'
+    | '/admin'
+    | '/api/admin/content'
+    | '/api/admin/orders'
+    | '/api/admin/products'
+    | '/api/admin/settings'
+    | '/api/admin/testimonials'
+    | '/api/payment/create'
+    | '/api/payment/verify'
+    | '/api/webhook/razorpay'
+  id:
+    | '__root__'
+    | '/'
+    | '/checkout'
+    | '/order-confirmation'
+    | '/admin/content'
+    | '/admin/login'
+    | '/admin/orders'
+    | '/admin/products'
+    | '/admin/testimonials'
+    | '/api/config'
+    | '/api/orders'
+    | '/admin/'
+    | '/api/admin/content'
+    | '/api/admin/orders'
+    | '/api/admin/products'
+    | '/api/admin/settings'
+    | '/api/admin/testimonials'
+    | '/api/payment/create'
+    | '/api/payment/verify'
+    | '/api/webhook/razorpay'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CheckoutRoute: typeof CheckoutRoute
+  OrderConfirmationRoute: typeof OrderConfirmationRoute
+  AdminContentRoute: typeof AdminContentRoute
+  AdminLoginRoute: typeof AdminLoginRoute
+  AdminOrdersRoute: typeof AdminOrdersRoute
+  AdminProductsRoute: typeof AdminProductsRoute
+  AdminTestimonialsRoute: typeof AdminTestimonialsRoute
+  ApiConfigRoute: typeof ApiConfigRoute
+  ApiOrdersRoute: typeof ApiOrdersRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  ApiAdminContentRoute: typeof ApiAdminContentRoute
+  ApiAdminOrdersRoute: typeof ApiAdminOrdersRoute
+  ApiAdminProductsRoute: typeof ApiAdminProductsRoute
+  ApiAdminSettingsRoute: typeof ApiAdminSettingsRoute
+  ApiAdminTestimonialsRoute: typeof ApiAdminTestimonialsRoute
+  ApiPaymentCreateRoute: typeof ApiPaymentCreateRoute
+  ApiPaymentVerifyRoute: typeof ApiPaymentVerifyRoute
+  ApiWebhookRazorpayRoute: typeof ApiWebhookRazorpayRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +286,155 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/order-confirmation': {
+      id: '/order-confirmation'
+      path: '/order-confirmation'
+      fullPath: '/order-confirmation'
+      preLoaderRoute: typeof OrderConfirmationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/content': {
+      id: '/admin/content'
+      path: '/admin/content'
+      fullPath: '/admin/content'
+      preLoaderRoute: typeof AdminContentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/admin/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/orders': {
+      id: '/admin/orders'
+      path: '/admin/orders'
+      fullPath: '/admin/orders'
+      preLoaderRoute: typeof AdminOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/products': {
+      id: '/admin/products'
+      path: '/admin/products'
+      fullPath: '/admin/products'
+      preLoaderRoute: typeof AdminProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/testimonials': {
+      id: '/admin/testimonials'
+      path: '/admin/testimonials'
+      fullPath: '/admin/testimonials'
+      preLoaderRoute: typeof AdminTestimonialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/config': {
+      id: '/api/config'
+      path: '/api/config'
+      fullPath: '/api/config'
+      preLoaderRoute: typeof ApiConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/orders': {
+      id: '/api/orders'
+      path: '/api/orders'
+      fullPath: '/api/orders'
+      preLoaderRoute: typeof ApiOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/content': {
+      id: '/api/admin/content'
+      path: '/api/admin/content'
+      fullPath: '/api/admin/content'
+      preLoaderRoute: typeof ApiAdminContentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/orders': {
+      id: '/api/admin/orders'
+      path: '/api/admin/orders'
+      fullPath: '/api/admin/orders'
+      preLoaderRoute: typeof ApiAdminOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/products': {
+      id: '/api/admin/products'
+      path: '/api/admin/products'
+      fullPath: '/api/admin/products'
+      preLoaderRoute: typeof ApiAdminProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/settings': {
+      id: '/api/admin/settings'
+      path: '/api/admin/settings'
+      fullPath: '/api/admin/settings'
+      preLoaderRoute: typeof ApiAdminSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/testimonials': {
+      id: '/api/admin/testimonials'
+      path: '/api/admin/testimonials'
+      fullPath: '/api/admin/testimonials'
+      preLoaderRoute: typeof ApiAdminTestimonialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/payment/create': {
+      id: '/api/payment/create'
+      path: '/api/payment/create'
+      fullPath: '/api/payment/create'
+      preLoaderRoute: typeof ApiPaymentCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/payment/verify': {
+      id: '/api/payment/verify'
+      path: '/api/payment/verify'
+      fullPath: '/api/payment/verify'
+      preLoaderRoute: typeof ApiPaymentVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhook/razorpay': {
+      id: '/api/webhook/razorpay'
+      path: '/api/webhook/razorpay'
+      fullPath: '/api/webhook/razorpay'
+      preLoaderRoute: typeof ApiWebhookRazorpayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CheckoutRoute: CheckoutRoute,
+  OrderConfirmationRoute: OrderConfirmationRoute,
+  AdminContentRoute: AdminContentRoute,
+  AdminLoginRoute: AdminLoginRoute,
+  AdminOrdersRoute: AdminOrdersRoute,
+  AdminProductsRoute: AdminProductsRoute,
+  AdminTestimonialsRoute: AdminTestimonialsRoute,
+  ApiConfigRoute: ApiConfigRoute,
+  ApiOrdersRoute: ApiOrdersRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  ApiAdminContentRoute: ApiAdminContentRoute,
+  ApiAdminOrdersRoute: ApiAdminOrdersRoute,
+  ApiAdminProductsRoute: ApiAdminProductsRoute,
+  ApiAdminSettingsRoute: ApiAdminSettingsRoute,
+  ApiAdminTestimonialsRoute: ApiAdminTestimonialsRoute,
+  ApiPaymentCreateRoute: ApiPaymentCreateRoute,
+  ApiPaymentVerifyRoute: ApiPaymentVerifyRoute,
+  ApiWebhookRazorpayRoute: ApiWebhookRazorpayRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -11,6 +11,11 @@ node_modules
 dist
 dist-ssr
 .output
+
+# Env (secrets) — keep .env.example committed, never .env
+.env
+.env.*
+!.env.example
 .vinxi
 .tanstack/**
 .nitro
