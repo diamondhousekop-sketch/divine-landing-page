@@ -106,18 +106,18 @@
   }
 }
 
-@utility deva {
+.deva {
   font-family: var(--font-deva);
 }
 
-@utility text-gold-gradient {
+.text-gold-gradient {
   background: var(--gradient-gold);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-@utility surface-card {
+.surface-card {
   background-color: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-2xl);
@@ -155,7 +155,7 @@
   }
 }
 
-@utility reveal {
+.reveal {
   opacity: 0;
 }
 
@@ -163,11 +163,11 @@
   animation: fadeUp 0.4s ease-out forwards;
 }
 
-@utility cta-gold-pulse {
+.cta-gold-pulse {
   animation: goldPulse 4s ease-out infinite;
 }
 
-@utility shimmer::after {
+.shimmer::after {
   content: "";
   position: absolute;
   inset: 0;
