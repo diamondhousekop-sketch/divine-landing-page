@@ -47,6 +47,34 @@ in the Supabase SQL Editor. After that, checkout + admin data flows are fully fu
 
 ## Backlog / next
 - P1: Product image upload (currently images use bundled assets; DB `images` jsonb ready).
-- P1: Order detail view + invoice/receipt PDF.
 - P2: Coupon/discount codes; multiple products/catalog; inventory decrement on paid order.
 - P2: Vimeo testimonial video embeds (schema field exists, UI plays placeholder).
+- P2: Per-page (not just site-wide) SEO meta title/description.
+
+## Funnel completion (2026-06) — added on top of the above
+- PRIORITY 1 (post-payment): rich online-payment success journey already live in
+  `/order-confirmation` (founder video from `content.founder_video_url`, summary card,
+  "पुढे काय होणार?" stepper, WhatsApp CTA, Purchase pixel/GA4 event). COD keeps simple summary.
+- PRIORITY 2 (tracking): `/track` public page + `/api/track` (order number + phone verified).
+- PRIORITY 3 (invoice): `src/lib/invoice.server.ts` — branded maroon/gold PDF via `pdf-lib`
+  (English doc, "Rs.", deterministic sequential number `DH-YYYY-NNNNN`, no DB column/DDL).
+  Auto-emailed on online payment (verify.ts) + on COD "confirmed" (admin/orders PATCH).
+  Admin Orders: WhatsApp deep-link, invoice download (`GET /api/admin/invoice`), re-send
+  (`POST /api/admin/invoice`), CSV export.
+- PRIORITY 4 (marketing): Admin → Integrations (`/admin/integrations`, `/api/admin/store-settings`)
+  for Meta Pixel / GA4 / GTM / GSC (stored in admin_settings `marketing`, surfaced via `/api/config`,
+  injected in `lib/analytics.ts`). Events: PageView, ViewContent (home), InitiateCheckout, Purchase.
+- PRIORITY 5 (legal): `/privacy-policy`, `/terms-and-conditions`, `/refund-and-cancellation-policy`,
+  `/shipping-policy`, `/contact-us` — content editable via Admin → Content (site_content keys),
+  footer links site-wide. Defs in `src/lib/legal.ts`, shell in `src/components/LegalPage.tsx`.
+- PRIORITY 6 (admin gaps): dashboard pending-COD + low-stock flag; CSV export; server-side
+  out-of-stock rejection in `/api/orders`; testimonial moderation (is_active) already present;
+  site-wide SEO/OG meta injection in `__root.tsx` (site_content `seo_title/seo_description/og_image`);
+  favicon present.
+- COD toggle: admin_settings `checkout.cod_enabled` (default TRUE — NOT flipped off); editable in
+  Admin → Integrations; enforced in checkout UI + `/api/orders`. Online payment untouched.
+- Verified: `bunx tsc --noEmit` clean, `bun run build` OK (node-server), SSR 200 on all new routes,
+  `/api/config` returns marketing+cod flags, invoice PDF generation runtime-tested, no secrets in
+  client bundle (grep-verified). NOTE: DB schema 0001 already applied on the live project; new
+  settings keys are created lazily via PostgREST upserts (no DDL needed).
+
