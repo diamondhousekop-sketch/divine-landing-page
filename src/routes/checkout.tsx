@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Loader2, ShieldCheck, Truck, Phone } from "lucide-react";
 import { getActiveProduct } from "@/lib/queries";
 import { publicPost } from "@/lib/admin-api";
+import { track } from "@/lib/analytics";
 import { GoldSwash } from "@/components/GoldSwash";
 
 const schema = z.object({
@@ -67,6 +68,16 @@ function Checkout() {
   const qty = Number(watch("quantity") || 1);
   const total = product.price * qty;
 
+  // Fire InitiateCheckout / begin_checkout once when the checkout loads.
+  useEffect(() => {
+    track("InitiateCheckout", "begin_checkout", {
+      currency: "INR",
+      value: product.price,
+      content_name: product.name,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const onSubmit = async (values: FormValues) => {
     setServerError(null);
     setSubmitting(true);
@@ -82,7 +93,10 @@ function Checkout() {
       }>("/api/orders", payload);
 
       if (values.payment_method === "cod") {
-        navigate({ to: "/order-confirmation", search: { order: order.order_number } });
+        navigate({
+          to: "/order-confirmation",
+          search: { order: order.order_number, amt: order.total_amount, m: "cod" },
+        });
         return;
       }
 
@@ -119,7 +133,10 @@ function Checkout() {
         }) => {
           try {
             await publicPost("/api/payment/verify", { order_id: order.id, ...resp });
-            navigate({ to: "/order-confirmation", search: { order: order.order_number } });
+            navigate({
+              to: "/order-confirmation",
+              search: { order: order.order_number, amt: order.total_amount, m: "online" },
+            });
           } catch {
             setServerError("पेमेंट पडताळणी अयशस्वी. कृपया संपर्क करा — 96 57 130 131.");
             setSubmitting(false);

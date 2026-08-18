@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as OrderConfirmationRouteImport } from './routes/order-confirmation'
+import { Route as TrackRouteImport } from './routes/track'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminContentRouteImport } from './routes/admin/content'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
@@ -20,6 +21,7 @@ import { Route as AdminProductsRouteImport } from './routes/admin/products'
 import { Route as AdminTestimonialsRouteImport } from './routes/admin/testimonials'
 import { Route as ApiConfigRouteImport } from './routes/api/config'
 import { Route as ApiOrdersRouteImport } from './routes/api/orders'
+import { Route as ApiTrackRouteImport } from './routes/api/track'
 import { Route as ApiAdminContentRouteImport } from './routes/api/admin/content'
 import { Route as ApiAdminOrdersRouteImport } from './routes/api/admin/orders'
 import { Route as ApiAdminProductsRouteImport } from './routes/api/admin/products'
@@ -42,6 +44,11 @@ const CheckoutRoute = CheckoutRouteImport.update({
 const OrderConfirmationRoute = OrderConfirmationRouteImport.update({
   id: '/order-confirmation',
   path: '/order-confirmation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrackRoute = TrackRouteImport.update({
+  id: '/track',
+  path: '/track',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -82,6 +89,11 @@ const ApiConfigRoute = ApiConfigRouteImport.update({
 const ApiOrdersRoute = ApiOrdersRouteImport.update({
   id: '/api/orders',
   path: '/api/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTrackRoute = ApiTrackRouteImport.update({
+  id: '/api/track',
+  path: '/api/track',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAdminContentRoute = ApiAdminContentRouteImport.update({
@@ -129,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/checkout': typeof CheckoutRoute
   '/order-confirmation': typeof OrderConfirmationRoute
+  '/track': typeof TrackRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/orders': typeof AdminOrdersRoute
@@ -136,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/admin/testimonials': typeof AdminTestimonialsRoute
   '/api/config': typeof ApiConfigRoute
   '/api/orders': typeof ApiOrdersRoute
+  '/api/track': typeof ApiTrackRoute
   '/admin/': typeof AdminIndexRoute
   '/api/admin/content': typeof ApiAdminContentRoute
   '/api/admin/orders': typeof ApiAdminOrdersRoute
@@ -150,6 +164,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/checkout': typeof CheckoutRoute
   '/order-confirmation': typeof OrderConfirmationRoute
+  '/track': typeof TrackRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/orders': typeof AdminOrdersRoute
@@ -157,6 +172,7 @@ export interface FileRoutesByTo {
   '/admin/testimonials': typeof AdminTestimonialsRoute
   '/api/config': typeof ApiConfigRoute
   '/api/orders': typeof ApiOrdersRoute
+  '/api/track': typeof ApiTrackRoute
   '/admin': typeof AdminIndexRoute
   '/api/admin/content': typeof ApiAdminContentRoute
   '/api/admin/orders': typeof ApiAdminOrdersRoute
@@ -172,6 +188,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/checkout': typeof CheckoutRoute
   '/order-confirmation': typeof OrderConfirmationRoute
+  '/track': typeof TrackRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/orders': typeof AdminOrdersRoute
@@ -179,6 +196,7 @@ export interface FileRoutesById {
   '/admin/testimonials': typeof AdminTestimonialsRoute
   '/api/config': typeof ApiConfigRoute
   '/api/orders': typeof ApiOrdersRoute
+  '/api/track': typeof ApiTrackRoute
   '/admin/': typeof AdminIndexRoute
   '/api/admin/content': typeof ApiAdminContentRoute
   '/api/admin/orders': typeof ApiAdminOrdersRoute
@@ -195,6 +213,7 @@ export interface FileRouteTypes {
     | '/'
     | '/checkout'
     | '/order-confirmation'
+    | '/track'
     | '/admin/content'
     | '/admin/login'
     | '/admin/orders'
@@ -202,6 +221,7 @@ export interface FileRouteTypes {
     | '/admin/testimonials'
     | '/api/config'
     | '/api/orders'
+    | '/api/track'
     | '/admin/'
     | '/api/admin/content'
     | '/api/admin/orders'
@@ -216,6 +236,7 @@ export interface FileRouteTypes {
     | '/'
     | '/checkout'
     | '/order-confirmation'
+    | '/track'
     | '/admin/content'
     | '/admin/login'
     | '/admin/orders'
@@ -223,6 +244,7 @@ export interface FileRouteTypes {
     | '/admin/testimonials'
     | '/api/config'
     | '/api/orders'
+    | '/api/track'
     | '/admin'
     | '/api/admin/content'
     | '/api/admin/orders'
@@ -237,6 +259,7 @@ export interface FileRouteTypes {
     | '/'
     | '/checkout'
     | '/order-confirmation'
+    | '/track'
     | '/admin/content'
     | '/admin/login'
     | '/admin/orders'
@@ -244,6 +267,7 @@ export interface FileRouteTypes {
     | '/admin/testimonials'
     | '/api/config'
     | '/api/orders'
+    | '/api/track'
     | '/admin/'
     | '/api/admin/content'
     | '/api/admin/orders'
@@ -259,6 +283,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CheckoutRoute: typeof CheckoutRoute
   OrderConfirmationRoute: typeof OrderConfirmationRoute
+  TrackRoute: typeof TrackRoute
   AdminContentRoute: typeof AdminContentRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
@@ -266,6 +291,7 @@ export interface RootRouteChildren {
   AdminTestimonialsRoute: typeof AdminTestimonialsRoute
   ApiConfigRoute: typeof ApiConfigRoute
   ApiOrdersRoute: typeof ApiOrdersRoute
+  ApiTrackRoute: typeof ApiTrackRoute
   AdminIndexRoute: typeof AdminIndexRoute
   ApiAdminContentRoute: typeof ApiAdminContentRoute
   ApiAdminOrdersRoute: typeof ApiAdminOrdersRoute
@@ -298,6 +324,13 @@ declare module '@tanstack/react-router' {
       path: '/order-confirmation'
       fullPath: '/order-confirmation'
       preLoaderRoute: typeof OrderConfirmationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/track': {
+      id: '/track'
+      path: '/track'
+      fullPath: '/track'
+      preLoaderRoute: typeof TrackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -354,6 +387,13 @@ declare module '@tanstack/react-router' {
       path: '/api/orders'
       fullPath: '/api/orders'
       preLoaderRoute: typeof ApiOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/track': {
+      id: '/api/track'
+      path: '/api/track'
+      fullPath: '/api/track'
+      preLoaderRoute: typeof ApiTrackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/content': {
@@ -419,6 +459,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CheckoutRoute: CheckoutRoute,
   OrderConfirmationRoute: OrderConfirmationRoute,
+  TrackRoute: TrackRoute,
   AdminContentRoute: AdminContentRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminOrdersRoute: AdminOrdersRoute,
@@ -426,6 +467,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminTestimonialsRoute: AdminTestimonialsRoute,
   ApiConfigRoute: ApiConfigRoute,
   ApiOrdersRoute: ApiOrdersRoute,
+  ApiTrackRoute: ApiTrackRoute,
   AdminIndexRoute: AdminIndexRoute,
   ApiAdminContentRoute: ApiAdminContentRoute,
   ApiAdminOrdersRoute: ApiAdminOrdersRoute,

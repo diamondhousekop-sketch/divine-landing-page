@@ -14,6 +14,7 @@ const FIELDS: { key: string; label: string; multiline?: boolean }[] = [
   { key: "hero_headline", label: "हिरो मुख्य शीर्षक" },
   { key: "hero_subheadline", label: "हिरो उप-शीर्षक (English)", multiline: true },
   { key: "announcement", label: "घोषणा पट्टी (announcement bar)", multiline: true },
+  { key: "founder_video_url", label: "Founder Thank-You व्हिडिओ URL (YouTube / Vimeo / MP4) — पेमेंट यशस्वी पानावर दिसेल" },
 ];
 
 function ContentPage() {

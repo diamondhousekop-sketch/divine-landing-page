@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -11,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { bootAnalytics, pageview } from "../lib/analytics";
 
 function NotFoundComponent() {
   return (
@@ -116,11 +118,23 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function AnalyticsBoot() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  useEffect(() => {
+    bootAnalytics();
+  }, []);
+  useEffect(() => {
+    pageview(pathname);
+  }, [pathname]);
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
+      <AnalyticsBoot />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>
