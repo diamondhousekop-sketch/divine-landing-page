@@ -24,6 +24,7 @@ import { Route as ApiConfigRouteImport } from './routes/api/config'
 import { Route as ApiOrdersRouteImport } from './routes/api/orders'
 import { Route as ApiTrackRouteImport } from './routes/api/track'
 import { Route as ApiAdminContentRouteImport } from './routes/api/admin/content'
+import { Route as ApiAdminInvoiceRouteImport } from './routes/api/admin/invoice'
 import { Route as ApiAdminOrdersRouteImport } from './routes/api/admin/orders'
 import { Route as ApiAdminProductsRouteImport } from './routes/api/admin/products'
 import { Route as ApiAdminSettingsRouteImport } from './routes/api/admin/settings'
@@ -107,6 +108,11 @@ const ApiAdminContentRoute = ApiAdminContentRouteImport.update({
   path: '/api/admin/content',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminInvoiceRoute = ApiAdminInvoiceRouteImport.update({
+  id: '/api/admin/invoice',
+  path: '/api/admin/invoice',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminOrdersRoute = ApiAdminOrdersRouteImport.update({
   id: '/api/admin/orders',
   path: '/api/admin/orders',
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/api/track': typeof ApiTrackRoute
   '/admin/': typeof AdminIndexRoute
   '/api/admin/content': typeof ApiAdminContentRoute
+  '/api/admin/invoice': typeof ApiAdminInvoiceRoute
   '/api/admin/orders': typeof ApiAdminOrdersRoute
   '/api/admin/products': typeof ApiAdminProductsRoute
   '/api/admin/settings': typeof ApiAdminSettingsRoute
@@ -183,6 +190,7 @@ export interface FileRoutesByTo {
   '/api/track': typeof ApiTrackRoute
   '/admin': typeof AdminIndexRoute
   '/api/admin/content': typeof ApiAdminContentRoute
+  '/api/admin/invoice': typeof ApiAdminInvoiceRoute
   '/api/admin/orders': typeof ApiAdminOrdersRoute
   '/api/admin/products': typeof ApiAdminProductsRoute
   '/api/admin/settings': typeof ApiAdminSettingsRoute
@@ -208,6 +216,7 @@ export interface FileRoutesById {
   '/api/track': typeof ApiTrackRoute
   '/admin/': typeof AdminIndexRoute
   '/api/admin/content': typeof ApiAdminContentRoute
+  '/api/admin/invoice': typeof ApiAdminInvoiceRoute
   '/api/admin/orders': typeof ApiAdminOrdersRoute
   '/api/admin/products': typeof ApiAdminProductsRoute
   '/api/admin/settings': typeof ApiAdminSettingsRoute
@@ -234,6 +243,7 @@ export interface FileRouteTypes {
     | '/api/track'
     | '/admin/'
     | '/api/admin/content'
+    | '/api/admin/invoice'
     | '/api/admin/orders'
     | '/api/admin/products'
     | '/api/admin/settings'
@@ -258,6 +268,7 @@ export interface FileRouteTypes {
     | '/api/track'
     | '/admin'
     | '/api/admin/content'
+    | '/api/admin/invoice'
     | '/api/admin/orders'
     | '/api/admin/products'
     | '/api/admin/settings'
@@ -282,6 +293,7 @@ export interface FileRouteTypes {
     | '/api/track'
     | '/admin/'
     | '/api/admin/content'
+    | '/api/admin/invoice'
     | '/api/admin/orders'
     | '/api/admin/products'
     | '/api/admin/settings'
@@ -307,6 +319,7 @@ export interface RootRouteChildren {
   ApiTrackRoute: typeof ApiTrackRoute
   AdminIndexRoute: typeof AdminIndexRoute
   ApiAdminContentRoute: typeof ApiAdminContentRoute
+  ApiAdminInvoiceRoute: typeof ApiAdminInvoiceRoute
   ApiAdminOrdersRoute: typeof ApiAdminOrdersRoute
   ApiAdminProductsRoute: typeof ApiAdminProductsRoute
   ApiAdminSettingsRoute: typeof ApiAdminSettingsRoute
@@ -423,6 +436,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminContentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/invoice': {
+      id: '/api/admin/invoice'
+      path: '/api/admin/invoice'
+      fullPath: '/api/admin/invoice'
+      preLoaderRoute: typeof ApiAdminInvoiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/orders': {
       id: '/api/admin/orders'
       path: '/api/admin/orders'
@@ -491,6 +511,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTrackRoute: ApiTrackRoute,
   AdminIndexRoute: AdminIndexRoute,
   ApiAdminContentRoute: ApiAdminContentRoute,
+  ApiAdminInvoiceRoute: ApiAdminInvoiceRoute,
   ApiAdminOrdersRoute: ApiAdminOrdersRoute,
   ApiAdminProductsRoute: ApiAdminProductsRoute,
   ApiAdminSettingsRoute: ApiAdminSettingsRoute,

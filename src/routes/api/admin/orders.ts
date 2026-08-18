@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { getAdminClient, requireAdmin, unauthorized } from "@/lib/supabase.server";
 import { json, badRequest, serverError } from "@/lib/http.server";
-import { sendShippingUpdate, sendDeliveryConfirmation } from "@/lib/email.server";
+import { sendShippingUpdate, sendDeliveryConfirmation, sendInvoiceEmail } from "@/lib/email.server";
+import { generateInvoice } from "@/lib/invoice.server";
 
 const PatchInput = z.object({
   id: z.string().uuid(),
@@ -74,6 +75,14 @@ export const Route = createFileRoute("/api/admin/orders")({
             void sendShippingUpdate(order, order.customer_email ?? undefined);
           } else if (updates.order_status === "delivered") {
             void sendDeliveryConfirmation(order, order.customer_email ?? undefined);
+          } else if (updates.order_status === "confirmed" && order.payment_method === "cod") {
+            // COD order confirmed by the owner -> generate + email the invoice.
+            try {
+              const { number, pdf } = await generateInvoice(admin, order);
+              void sendInvoiceEmail(order, order.customer_email ?? undefined, { pdf, number });
+            } catch (e) {
+              console.error("[admin/orders] COD invoice failed:", e);
+            }
           }
           return json({ order });
         } catch (err) {

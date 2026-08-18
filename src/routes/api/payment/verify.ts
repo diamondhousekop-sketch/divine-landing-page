@@ -4,7 +4,8 @@ import { getAdminClient } from "@/lib/supabase.server";
 import { getRazorpayConfig, verifyPaymentSignature } from "@/lib/razorpay.server";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit.server";
 import { json, badRequest, serverError } from "@/lib/http.server";
-import { sendPaymentConfirmation, sendOrderConfirmation } from "@/lib/email.server";
+import { sendPaymentConfirmation } from "@/lib/email.server";
+import { generateInvoice } from "@/lib/invoice.server";
 
 const Input = z.object({
   order_id: z.string().uuid(),
@@ -65,8 +66,18 @@ export const Route = createFileRoute("/api/payment/verify")({
 
           if (error || !order) return serverError("Could not update order");
 
-          void sendOrderConfirmation(order, order.customer_email ?? undefined);
-          void sendPaymentConfirmation(order, order.customer_email ?? undefined);
+          // Generate the branded PDF invoice and email it (best-effort — must
+          // never block the success response).
+          try {
+            const { number, pdf } = await generateInvoice(admin, order);
+            void sendPaymentConfirmation(order, order.customer_email ?? undefined, {
+              pdf,
+              number,
+            });
+          } catch (e) {
+            console.error("[payment/verify] invoice/email failed:", e);
+            void sendPaymentConfirmation(order, order.customer_email ?? undefined);
+          }
 
           return json({ ok: true, order_number: order.order_number });
         } catch (err) {

@@ -29,6 +29,35 @@ export async function adminFetch<T = unknown>(
   return data as T;
 }
 
+// Downloads a binary (e.g. PDF) from an authenticated admin endpoint and
+// triggers a browser save dialog.
+export async function adminDownload(path: string, fallbackName: string): Promise<void> {
+  const res = await fetch(path, { headers: await authHeaders() });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    let msg = `Download failed (${res.status})`;
+    try {
+      const d = JSON.parse(text);
+      if (d?.error) msg = d.error as string;
+    } catch {
+      /* ignore */
+    }
+    throw new Error(msg);
+  }
+  const disp = res.headers.get("content-disposition") || "";
+  const match = disp.match(/filename="?([^"]+)"?/);
+  const filename = match?.[1] || fallbackName;
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 // Public (no auth) POST helper for the checkout flow.
 export async function publicPost<T = unknown>(path: string, body: unknown): Promise<T> {
   const res = await fetch(path, {

@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Search, RefreshCw } from "lucide-react";
+import { Search, RefreshCw, MessageCircle, FileDown, Send, Download } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { adminFetch } from "@/lib/admin-api";
+import { adminFetch, adminDownload } from "@/lib/admin-api";
 import type { Order, OrderStatus, PaymentStatus } from "@/lib/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -13,6 +13,49 @@ export const Route = createFileRoute("/admin/orders")({
 
 const ORDER_STATUSES: OrderStatus[] = ["placed", "confirmed", "shipped", "delivered", "cancelled"];
 const PAYMENT_STATUSES: PaymentStatus[] = ["pending", "paid", "failed"];
+
+function waPhone(phone: string): string {
+  const digits = (phone || "").replace(/\D/g, "");
+  const last10 = digits.slice(-10);
+  return `91${last10}`;
+}
+
+const STATUS_MSG: Record<string, string> = {
+  placed: "आम्हाला तुमची ऑर्डर मिळाली आहे",
+  confirmed: "तुमची ऑर्डर कन्फर्म झाली असून पूजा करून पॅक केली जात आहे",
+  shipped: "तुमची ऑर्डर पाठवण्यात आली आहे 🚚",
+  delivered: "तुमची ऑर्डर पोहोचली आहे 🙏",
+  cancelled: "तुमची ऑर्डर रद्द करण्यात आली आहे",
+};
+
+function whatsappOrderLink(o: Order): string {
+  const status = STATUS_MSG[o.order_status] || "";
+  const msg = `नमस्कार ${o.customer_name} 🙏, Diamond House कडून — तुमची ऑर्डर ${o.order_number} ${status}. काही प्रश्न असल्यास कळवा.`;
+  return `https://wa.me/${waPhone(o.customer_phone)}?text=${encodeURIComponent(msg)}`;
+}
+
+function toCsv(orders: Order[]): string {
+  const headers = [
+    "order_number",
+    "created_at",
+    "customer_name",
+    "customer_phone",
+    "customer_email",
+    "customer_address",
+    "customer_pincode",
+    "quantity",
+    "total_amount",
+    "payment_method",
+    "payment_status",
+    "order_status",
+  ];
+  const esc = (v: unknown) => {
+    const s = v == null ? "" : String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const rows = orders.map((o) => headers.map((h) => esc((o as Record<string, unknown>)[h])).join(","));
+  return [headers.join(","), ...rows].join("\n");
+}
 
 const statusColor: Record<string, string> = {
   placed: "bg-secondary text-secondary-foreground",
@@ -83,6 +126,81 @@ function OrdersPage() {
 
   const selectCls = "rounded-lg border border-border bg-card px-2 py-1 text-xs text-foreground";
 
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const downloadInvoice = async (o: Order) => {
+    setBusyId(o.id);
+    try {
+      await adminDownload(`/api/admin/invoice?order_id=${o.id}`, `Invoice-${o.order_number}.pdf`);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Invoice download failed");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const resendInvoice = async (o: Order) => {
+    if (!confirm(`ग्राहकाला (${o.customer_email || "ईमेल नाही"}) बिल पुन्हा पाठवायचे?`)) return;
+    setBusyId(o.id);
+    try {
+      const d = await adminFetch<{ invoice_number: string; emailed_to: string }>(
+        "/api/admin/invoice",
+        { method: "POST", body: { order_id: o.id } },
+      );
+      alert(`बिल ${d.invoice_number} पाठवले → ${d.emailed_to}`);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Resend failed");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const exportCsv = () => {
+    const csv = toCsv(orders);
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `diamond-house-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const actionBtns = (o: Order) => (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <a
+        href={whatsappOrderLink(o)}
+        target="_blank"
+        rel="noreferrer"
+        title="WhatsApp ग्राहक"
+        data-testid={`order-whatsapp-${o.order_number}`}
+        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--whatsapp)] text-[var(--whatsapp)] hover:bg-[color-mix(in_oklab,var(--whatsapp)_12%,transparent)]"
+      >
+        <MessageCircle className="h-4 w-4" />
+      </a>
+      <button
+        onClick={() => downloadInvoice(o)}
+        disabled={busyId === o.id}
+        title="बिल डाउनलोड (PDF)"
+        data-testid={`order-invoice-download-${o.order_number}`}
+        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-navy hover:bg-secondary disabled:opacity-50"
+      >
+        <FileDown className="h-4 w-4" />
+      </button>
+      <button
+        onClick={() => resendInvoice(o)}
+        disabled={busyId === o.id}
+        title="बिल ईमेल करा"
+        data-testid={`order-invoice-resend-${o.order_number}`}
+        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-navy hover:bg-secondary disabled:opacity-50"
+      >
+        <Send className="h-4 w-4" />
+      </button>
+    </div>
+  );
+
   return (
     <AdminLayout title="ऑर्डर्स">
       <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -129,6 +247,14 @@ function OrdersPage() {
           data-testid="orders-refresh"
         >
           <RefreshCw className="h-4 w-4" /> रिफ्रेश
+        </button>
+        <button
+          onClick={exportCsv}
+          disabled={orders.length === 0}
+          className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-2 text-sm hover:bg-secondary disabled:opacity-50"
+          data-testid="orders-export-csv"
+        >
+          <Download className="h-4 w-4" /> CSV
         </button>
       </div>
 
@@ -191,6 +317,7 @@ function OrdersPage() {
                   ))}
                 </select>
               </div>
+              <div className="mt-3 border-t border-border/60 pt-3">{actionBtns(o)}</div>
             </div>
           ))}
         </div>
@@ -208,6 +335,7 @@ function OrdersPage() {
                 <th className="px-4 py-3">Payment</th>
                 <th className="px-4 py-3">Order status</th>
                 <th className="px-4 py-3">Date</th>
+                <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -263,6 +391,7 @@ function OrdersPage() {
                       minute: "2-digit",
                     })}
                   </td>
+                  <td className="px-4 py-3">{actionBtns(o)}</td>
                 </tr>
               ))}
             </tbody>

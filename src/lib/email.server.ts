@@ -77,14 +77,23 @@ function orderTable(order: OrderLike): string {
   </table>`;
 }
 
-async function send(to: string, subject: string, html: string) {
+type Attachment = { filename: string; content: Buffer };
+
+async function send(to: string, subject: string, html: string, attachments?: Attachment[]) {
   const client = resendClient();
   if (!client) {
     console.warn("[email] RESEND_API_KEY missing — skipping email:", subject);
     return;
   }
   try {
-    const res = await client.emails.send({ from: fromAddress(), to, subject, html });
+    const payload: Parameters<typeof client.emails.send>[0] = {
+      from: fromAddress(),
+      to,
+      subject,
+      html,
+    };
+    if (attachments && attachments.length) payload.attachments = attachments;
+    const res = await client.emails.send(payload);
     if (res.error) console.error("[email] Resend error:", res.error);
   } catch (err) {
     console.error("[email] send failed:", err);
@@ -102,15 +111,45 @@ export async function sendOrderConfirmation(order: OrderLike, customerEmail?: st
   await send(customerEmail, `Diamond House — ऑर्डर ${order.order_number} मिळाली`, html);
 }
 
-export async function sendPaymentConfirmation(order: OrderLike, customerEmail?: string) {
+export async function sendPaymentConfirmation(
+  order: OrderLike,
+  customerEmail?: string,
+  invoice?: { pdf: Uint8Array; number: string },
+) {
   if (!customerEmail) return;
+  const invoiceLine = invoice
+    ? `<p style="font-size:13px;color:#6b5b4b;">तुमचे बिल (Invoice ${invoice.number}) या ईमेलसोबत PDF मध्ये जोडले आहे. / Your invoice is attached as a PDF.</p>`
+    : "";
   const html = shell(
     "पेमेंट यशस्वी / Payment successful",
     `<p style="font-size:15px;line-height:1.7;">धन्यवाद ${order.customer_name}! तुमचे पेमेंट यशस्वीरित्या प्राप्त झाले आहे. ✅</p>
      <p style="font-size:13px;color:#6b5b4b;">Your payment has been received. Your order is now confirmed.</p>
+     ${orderTable(order)}
+     ${invoiceLine}`,
+  );
+  const attachments = invoice
+    ? [{ filename: `Invoice-${invoice.number}.pdf`, content: Buffer.from(invoice.pdf) }]
+    : undefined;
+  await send(customerEmail, `Diamond House — पेमेंट मिळाले (${order.order_number})`, html, attachments);
+}
+
+// Sends (or re-sends) the branded invoice PDF to the customer. Used by the admin
+// "re-send invoice" action and by COD confirmation.
+export async function sendInvoiceEmail(
+  order: OrderLike,
+  customerEmail: string | undefined,
+  invoice: { pdf: Uint8Array; number: string },
+) {
+  if (!customerEmail) return;
+  const html = shell(
+    "तुमचे बिल / Your invoice",
+    `<p style="font-size:15px;line-height:1.7;">नमस्कार ${order.customer_name},<br>तुमच्या ऑर्डरचे बिल (Invoice ${invoice.number}) सोबत जोडले आहे. 🙏</p>
+     <p style="font-size:13px;color:#6b5b4b;">Please find your invoice attached as a PDF.</p>
      ${orderTable(order)}`,
   );
-  await send(customerEmail, `Diamond House — पेमेंट मिळाले (${order.order_number})`, html);
+  await send(customerEmail, `Diamond House — बिल ${invoice.number} (${order.order_number})`, html, [
+    { filename: `Invoice-${invoice.number}.pdf`, content: Buffer.from(invoice.pdf) },
+  ]);
 }
 
 export async function sendAdminAlert(order: OrderLike) {
