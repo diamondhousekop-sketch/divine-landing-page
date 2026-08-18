@@ -53,7 +53,9 @@ function toCsv(orders: Order[]): string {
     const s = v == null ? "" : String(v);
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
-  const rows = orders.map((o) => headers.map((h) => esc((o as Record<string, unknown>)[h])).join(","));
+  const rows = orders.map((o) =>
+    headers.map((h) => esc((o as Record<string, unknown>)[h])).join(","),
+  );
   return [headers.join(","), ...rows].join("\n");
 }
 

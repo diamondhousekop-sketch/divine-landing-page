@@ -117,15 +117,16 @@ export async function buildInvoicePdf(
   const W = page.getWidth();
   const M = 40;
 
-  const text = (
+  const text = (s: string, x: number, y: number, size: number, f = font, color = C.ink) =>
+    page.drawText(s, { x, y, size, font: f, color });
+  const rightText = (
     s: string,
-    x: number,
+    xRight: number,
     y: number,
     size: number,
     f = font,
     color = C.ink,
-  ) => page.drawText(s, { x, y, size, font: f, color });
-  const rightText = (s: string, xRight: number, y: number, size: number, f = font, color = C.ink) => {
+  ) => {
     const w = f.widthOfTextAtSize(s, size);
     page.drawText(s, { x: xRight - w, y, size, font: f, color });
   };
@@ -203,7 +204,14 @@ export async function buildInvoicePdf(
       y -= 12;
     }
   }
-  text(`Pincode: ${latin(order.customer_pincode)}   Phone: ${latin(order.customer_phone)}`, M, y, 9, font, C.muted);
+  text(
+    `Pincode: ${latin(order.customer_pincode)}   Phone: ${latin(order.customer_phone)}`,
+    M,
+    y,
+    9,
+    font,
+    C.muted,
+  );
   y -= 26;
 
   // ── Items table ──
@@ -214,7 +222,8 @@ export async function buildInvoicePdf(
   rightText("RATE", M + 440, tableTop + 4, 9, bold, C.gold);
   rightText("AMOUNT", W - M - 10, tableTop + 4, 9, bold, C.gold);
 
-  const rate = order.quantity > 0 ? Number(order.total_amount) / order.quantity : Number(order.total_amount);
+  const rate =
+    order.quantity > 0 ? Number(order.total_amount) / order.quantity : Number(order.total_amount);
   let ry = tableTop - 22;
   text(latin(biz.product_label, "Icchapurti Lucky Stone"), M + 10, ry + 5, 10, font);
   rightText(String(order.quantity), M + 360, ry + 5, 10, font);
@@ -248,7 +257,12 @@ export async function buildInvoicePdf(
 
   // ── Footer note ──
   const fY = 90;
-  page.drawLine({ start: { x: M, y: fY + 18 }, end: { x: W - M, y: fY + 18 }, thickness: 1, color: C.line });
+  page.drawLine({
+    start: { x: M, y: fY + 18 },
+    end: { x: W - M, y: fY + 18 },
+    thickness: 1,
+    color: C.line,
+  });
   text(
     "This is a computer-generated invoice for a blessed / ritual item. As a pooja article, it is",
     M,

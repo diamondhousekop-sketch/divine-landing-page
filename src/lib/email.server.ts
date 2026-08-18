@@ -130,7 +130,12 @@ export async function sendPaymentConfirmation(
   const attachments = invoice
     ? [{ filename: `Invoice-${invoice.number}.pdf`, content: Buffer.from(invoice.pdf) }]
     : undefined;
-  await send(customerEmail, `Diamond House — पेमेंट मिळाले (${order.order_number})`, html, attachments);
+  await send(
+    customerEmail,
+    `Diamond House — पेमेंट मिळाले (${order.order_number})`,
+    html,
+    attachments,
+  );
 }
 
 // Sends (or re-sends) the branded invoice PDF to the customer. Used by the admin

@@ -169,8 +169,8 @@ function IntegrationsPage() {
             </label>
             {!codEnabled && (
               <p className="mt-3 rounded-xl bg-destructive/10 px-4 py-2.5 text-xs text-destructive">
-                COD बंद आहे — ग्राहक फक्त ऑनलाईन पेमेंट करू शकतील. ऑनलाईन पेमेंट सुरू असल्याची खात्री
-                करा (Content → Payments).
+                COD बंद आहे — ग्राहक फक्त ऑनलाईन पेमेंट करू शकतील. ऑनलाईन पेमेंट सुरू असल्याची
+                खात्री करा (Content → Payments).
               </p>
             )}
           </div>
@@ -244,8 +244,8 @@ function IntegrationsPage() {
             className="inline-flex items-center gap-2 rounded-full bg-navy px-6 py-2.5 text-sm font-semibold text-gold-light disabled:opacity-70"
             data-testid="settings-save"
           >
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} जतन
-            करा
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}{" "}
+            जतन करा
           </button>
           {msg && (
             <span className="deva text-sm text-[var(--whatsapp)]" data-testid="settings-msg">

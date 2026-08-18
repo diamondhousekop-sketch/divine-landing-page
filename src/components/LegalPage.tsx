@@ -23,7 +23,10 @@ export function LegalLinks({ className = "" }: { className?: string }) {
 
 // Full page shell for a single legal page: navy header band + content card + footer.
 export function LegalPage({ title, body }: { title: string; body: string }) {
-  const paragraphs = body.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+  const paragraphs = body
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean);
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-background">
       {/* Header */}
@@ -44,7 +47,10 @@ export function LegalPage({ title, body }: { title: string; body: string }) {
       <section className="px-5 py-14 md:py-20">
         <div className="mx-auto max-w-4xl">
           <div className="text-center">
-            <h1 className="deva text-3xl font-normal text-primary md:text-4xl" data-testid="legal-title">
+            <h1
+              className="deva text-3xl font-normal text-primary md:text-4xl"
+              data-testid="legal-title"
+            >
               {title}
             </h1>
             <GoldSwash className="mx-auto mt-3 w-44" />
