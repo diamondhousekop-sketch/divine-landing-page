@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Reveal } from "@/components/Reveal";
 import { GoldSwash } from "@/components/GoldSwash";
+import { LegalLinks } from "@/components/LegalPage";
 import { getActiveProduct, getTestimonials, getSiteContent } from "@/lib/queries";
 import { track } from "@/lib/analytics";
 import templeBg from "@/assets/temple-bg.jpg";
@@ -532,6 +533,9 @@ function Index() {
         <p className="deva mt-10 text-center text-xs opacity-60">
           © {new Date().getFullYear()} Diamond House, कोल्हापूर. सर्व हक्क राखीव.
         </p>
+        <div className="mt-5 flex justify-center">
+          <LegalLinks className="justify-center" />
+        </div>
       </footer>
 
       {/* STICKY MOBILE CTA */}

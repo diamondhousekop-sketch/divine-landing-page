@@ -13,6 +13,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { bootAnalytics, pageview } from "../lib/analytics";
+import { getSiteContent } from "../lib/queries";
 
 function NotFoundComponent() {
   return (
@@ -75,28 +76,57 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
+  // Site-wide SEO defaults (admin-editable via Admin → Content). Individual routes
+  // can still override title/description; this provides the fallback + OG image
+  // used for social/WhatsApp link previews.
+  loader: async () => {
+    const content = await getSiteContent();
+    return {
+      seo: {
+        title: content["seo_title"] || "",
+        description: content["seo_description"] || "",
+        ogImage: content["og_image"] || "",
+      },
+    };
+  },
+  head: ({ loaderData }) => {
+    const seo = loaderData?.seo;
+    const meta: Array<Record<string, string>> = [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "author", content: "Diamond House, Kolhapur" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-    ],
-    links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Marcellus&family=Playfair+Display:wght@500;700&family=Poppins:wght@300;400;500;600;700&family=Tiro+Devanagari+Marathi&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap",
-      },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
-    ],
-  }),
+    ];
+    if (seo?.title) {
+      meta.push({ title: seo.title } as unknown as Record<string, string>);
+      meta.push({ property: "og:title", content: seo.title });
+    }
+    if (seo?.description) {
+      meta.push({ name: "description", content: seo.description });
+      meta.push({ property: "og:description", content: seo.description });
+    }
+    if (seo?.ogImage) {
+      meta.push({ property: "og:image", content: seo.ogImage });
+      meta.push({ name: "twitter:image", content: seo.ogImage });
+    }
+    return {
+      meta,
+      links: [
+        {
+          rel: "stylesheet",
+          href: appCss,
+        },
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Marcellus&family=Playfair+Display:wght@500;700&family=Poppins:wght@300;400;500;600;700&family=Tiro+Devanagari+Marathi&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap",
+        },
+        { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      ],
+    };
+  },
 
   shellComponent: RootShell,
   component: RootComponent,

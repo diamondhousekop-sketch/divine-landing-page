@@ -11,7 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as ContactUsRouteImport } from './routes/contact-us'
 import { Route as OrderConfirmationRouteImport } from './routes/order-confirmation'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
+import { Route as RefundAndCancellationPolicyRouteImport } from './routes/refund-and-cancellation-policy'
+import { Route as ShippingPolicyRouteImport } from './routes/shipping-policy'
+import { Route as TermsAndConditionsRouteImport } from './routes/terms-and-conditions'
 import { Route as TrackRouteImport } from './routes/track'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAccountRouteImport } from './routes/admin/account'
@@ -45,9 +50,35 @@ const CheckoutRoute = CheckoutRouteImport.update({
   path: '/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactUsRoute = ContactUsRouteImport.update({
+  id: '/contact-us',
+  path: '/contact-us',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrderConfirmationRoute = OrderConfirmationRouteImport.update({
   id: '/order-confirmation',
   path: '/order-confirmation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RefundAndCancellationPolicyRoute =
+  RefundAndCancellationPolicyRouteImport.update({
+    id: '/refund-and-cancellation-policy',
+    path: '/refund-and-cancellation-policy',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ShippingPolicyRoute = ShippingPolicyRouteImport.update({
+  id: '/shipping-policy',
+  path: '/shipping-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsAndConditionsRoute = TermsAndConditionsRouteImport.update({
+  id: '/terms-and-conditions',
+  path: '/terms-and-conditions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrackRoute = TrackRouteImport.update({
@@ -164,7 +195,12 @@ const ApiWebhookRazorpayRoute = ApiWebhookRazorpayRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/checkout': typeof CheckoutRoute
+  '/contact-us': typeof ContactUsRoute
   '/order-confirmation': typeof OrderConfirmationRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/refund-and-cancellation-policy': typeof RefundAndCancellationPolicyRoute
+  '/shipping-policy': typeof ShippingPolicyRoute
+  '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/track': typeof TrackRoute
   '/admin/account': typeof AdminAccountRoute
   '/admin/content': typeof AdminContentRoute
@@ -191,7 +227,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/checkout': typeof CheckoutRoute
+  '/contact-us': typeof ContactUsRoute
   '/order-confirmation': typeof OrderConfirmationRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/refund-and-cancellation-policy': typeof RefundAndCancellationPolicyRoute
+  '/shipping-policy': typeof ShippingPolicyRoute
+  '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/track': typeof TrackRoute
   '/admin/account': typeof AdminAccountRoute
   '/admin/content': typeof AdminContentRoute
@@ -219,7 +260,12 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/checkout': typeof CheckoutRoute
+  '/contact-us': typeof ContactUsRoute
   '/order-confirmation': typeof OrderConfirmationRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/refund-and-cancellation-policy': typeof RefundAndCancellationPolicyRoute
+  '/shipping-policy': typeof ShippingPolicyRoute
+  '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/track': typeof TrackRoute
   '/admin/account': typeof AdminAccountRoute
   '/admin/content': typeof AdminContentRoute
@@ -248,7 +294,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/checkout'
+    | '/contact-us'
     | '/order-confirmation'
+    | '/privacy-policy'
+    | '/refund-and-cancellation-policy'
+    | '/shipping-policy'
+    | '/terms-and-conditions'
     | '/track'
     | '/admin/account'
     | '/admin/content'
@@ -275,7 +326,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/checkout'
+    | '/contact-us'
     | '/order-confirmation'
+    | '/privacy-policy'
+    | '/refund-and-cancellation-policy'
+    | '/shipping-policy'
+    | '/terms-and-conditions'
     | '/track'
     | '/admin/account'
     | '/admin/content'
@@ -302,7 +358,12 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/checkout'
+    | '/contact-us'
     | '/order-confirmation'
+    | '/privacy-policy'
+    | '/refund-and-cancellation-policy'
+    | '/shipping-policy'
+    | '/terms-and-conditions'
     | '/track'
     | '/admin/account'
     | '/admin/content'
@@ -330,7 +391,12 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CheckoutRoute: typeof CheckoutRoute
+  ContactUsRoute: typeof ContactUsRoute
   OrderConfirmationRoute: typeof OrderConfirmationRoute
+  PrivacyPolicyRoute: typeof PrivacyPolicyRoute
+  RefundAndCancellationPolicyRoute: typeof RefundAndCancellationPolicyRoute
+  ShippingPolicyRoute: typeof ShippingPolicyRoute
+  TermsAndConditionsRoute: typeof TermsAndConditionsRoute
   TrackRoute: typeof TrackRoute
   AdminAccountRoute: typeof AdminAccountRoute
   AdminContentRoute: typeof AdminContentRoute
@@ -371,11 +437,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact-us': {
+      id: '/contact-us'
+      path: '/contact-us'
+      fullPath: '/contact-us'
+      preLoaderRoute: typeof ContactUsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/order-confirmation': {
       id: '/order-confirmation'
       path: '/order-confirmation'
       fullPath: '/order-confirmation'
       preLoaderRoute: typeof OrderConfirmationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refund-and-cancellation-policy': {
+      id: '/refund-and-cancellation-policy'
+      path: '/refund-and-cancellation-policy'
+      fullPath: '/refund-and-cancellation-policy'
+      preLoaderRoute: typeof RefundAndCancellationPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shipping-policy': {
+      id: '/shipping-policy'
+      path: '/shipping-policy'
+      fullPath: '/shipping-policy'
+      preLoaderRoute: typeof ShippingPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms-and-conditions': {
+      id: '/terms-and-conditions'
+      path: '/terms-and-conditions'
+      fullPath: '/terms-and-conditions'
+      preLoaderRoute: typeof TermsAndConditionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/track': {
@@ -538,7 +639,12 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CheckoutRoute: CheckoutRoute,
+  ContactUsRoute: ContactUsRoute,
   OrderConfirmationRoute: OrderConfirmationRoute,
+  PrivacyPolicyRoute: PrivacyPolicyRoute,
+  RefundAndCancellationPolicyRoute: RefundAndCancellationPolicyRoute,
+  ShippingPolicyRoute: ShippingPolicyRoute,
+  TermsAndConditionsRoute: TermsAndConditionsRoute,
   TrackRoute: TrackRoute,
   AdminAccountRoute: AdminAccountRoute,
   AdminContentRoute: AdminContentRoute,

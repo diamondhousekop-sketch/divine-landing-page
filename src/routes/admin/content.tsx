@@ -3,13 +3,16 @@ import { useEffect, useState } from "react";
 import { Loader2, Save, CreditCard } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { adminFetch } from "@/lib/admin-api";
+import { LEGAL, LEGAL_ORDER } from "@/lib/legal";
 
 export const Route = createFileRoute("/admin/content")({
   head: () => ({ meta: [{ title: "Content & Payments | Diamond House Admin" }] }),
   component: ContentPage,
 });
 
-const FIELDS: { key: string; label: string; multiline?: boolean }[] = [
+type FieldDef = { key: string; label: string; multiline?: boolean; big?: boolean };
+
+const CONTENT_FIELDS: FieldDef[] = [
   { key: "hero_badge", label: "हिरो बॅज (वरील छोटा मजकूर)" },
   { key: "hero_headline", label: "हिरो मुख्य शीर्षक" },
   { key: "hero_subheadline", label: "हिरो उप-शीर्षक (English)", multiline: true },
@@ -19,6 +22,19 @@ const FIELDS: { key: string; label: string; multiline?: boolean }[] = [
     label: "Founder Thank-You व्हिडिओ URL (YouTube / Vimeo / MP4) — पेमेंट यशस्वी पानावर दिसेल",
   },
 ];
+
+const SEO_FIELDS: FieldDef[] = [
+  { key: "seo_title", label: "SEO / social title (site-wide default)" },
+  { key: "seo_description", label: "SEO / social description", multiline: true },
+  { key: "og_image", label: "Social share image URL (OG image — WhatsApp/Facebook preview)" },
+];
+
+const LEGAL_FIELDS: FieldDef[] = LEGAL_ORDER.flatMap((k) => [
+  { key: LEGAL[k].titleKey, label: `${LEGAL[k].footerLabel} — शीर्षक` },
+  { key: LEGAL[k].bodyKey, label: `${LEGAL[k].footerLabel} — मजकूर`, multiline: true, big: true },
+]);
+
+const FIELDS: FieldDef[] = [...CONTENT_FIELDS, ...SEO_FIELDS, ...LEGAL_FIELDS];
 
 function ContentPage() {
   const [values, setValues] = useState<Record<string, string>>({});
@@ -129,7 +145,7 @@ function ContentPage() {
                   <label className="deva text-sm text-foreground">{f.label}</label>
                   {f.multiline ? (
                     <textarea
-                      rows={2}
+                      rows={f.big ? 10 : 2}
                       className={inputCls}
                       value={values[f.key] ?? ""}
                       onChange={(e) => setValues({ ...values, [f.key]: e.target.value })}

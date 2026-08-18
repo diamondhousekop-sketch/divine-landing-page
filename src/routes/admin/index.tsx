@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
-import { IndianRupee, ShoppingBag, Clock, TrendingUp } from "lucide-react";
+import { IndianRupee, ShoppingBag, Clock, TrendingUp, PackageX } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { adminFetch } from "@/lib/admin-api";
-import type { Order } from "@/lib/types";
+import type { Order, Product } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Dashboard | Diamond House Admin" }] }),
@@ -19,20 +19,31 @@ function startOfToday() {
 
 function Dashboard() {
   const [orders, setOrders] = useState<Order[] | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     adminFetch<{ orders: Order[] }>("/api/admin/orders")
       .then((d) => setOrders(d.orders))
       .catch((e) => setError(e.message));
+    adminFetch<{ products: Product[] }>("/api/admin/products")
+      .then((d) => setProducts(d.products))
+      .catch(() => {});
   }, []);
 
   const today = startOfToday().getTime();
   const list = orders ?? [];
   const paid = list.filter((o) => o.payment_status === "paid");
   const revenue = paid.reduce((s, o) => s + Number(o.total_amount), 0);
+  const revenueToday = paid
+    .filter((o) => new Date(o.created_at).getTime() >= today)
+    .reduce((s, o) => s + Number(o.total_amount), 0);
   const ordersToday = list.filter((o) => new Date(o.created_at).getTime() >= today).length;
-  const pending = list.filter((o) => o.order_status === "placed").length;
+  const pendingCod = list.filter(
+    (o) => o.payment_method === "cod" && o.order_status === "placed",
+  ).length;
+
+  const outOfStock = products.filter((p) => p.is_active && Number(p.stock_quantity) <= 0);
 
   // Last 7 days revenue chart
   const days: { label: string; revenue: number; orders: number }[] = [];
@@ -56,14 +67,19 @@ function Dashboard() {
 
   const stats = [
     { label: "आजच्या ऑर्डर्स", en: "Orders today", value: ordersToday, icon: ShoppingBag },
-    { label: "एकूण ऑर्डर्स", en: "Total orders", value: list.length, icon: TrendingUp },
+    {
+      label: "आजचा महसूल",
+      en: "Revenue today (paid)",
+      value: `₹${revenueToday.toLocaleString("en-IN")}`,
+      icon: IndianRupee,
+    },
     {
       label: "एकूण महसूल",
       en: "Revenue (paid)",
       value: `₹${revenue.toLocaleString("en-IN")}`,
-      icon: IndianRupee,
+      icon: TrendingUp,
     },
-    { label: "प्रलंबित", en: "Pending", value: pending, icon: Clock },
+    { label: "प्रलंबित COD", en: "Pending COD", value: pendingCod, icon: Clock },
   ];
 
   return (
@@ -72,6 +88,18 @@ function Dashboard() {
         <p className="mb-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </p>
+      )}
+      {outOfStock.length > 0 && (
+        <div
+          className="mb-4 flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          data-testid="dashboard-lowstock"
+        >
+          <PackageX className="h-4 w-4" />
+          <span className="deva">
+            {outOfStock.length} प्रॉडक्ट स्टॉक संपले आहे —{" "}
+            {outOfStock.map((p) => p.name).join(", ")}. (Products मध्ये स्टॉक अपडेट करा)
+          </span>
+        </div>
       )}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" data-testid="dashboard-stats">
         {stats.map((s) => {
