@@ -34,12 +34,12 @@ export const Route = createFileRoute("/api/admin/settings")({
           const v = (data?.value ?? {}) as Record<string, string>;
           return json({
             razorpay: {
-              key_id: v.key_id ?? "",
-              key_secret_masked: mask(v.key_secret),
-              webhook_secret_masked: mask(v.webhook_secret),
-              has_key_secret: !!v.key_secret,
-              has_webhook_secret: !!v.webhook_secret,
-              enabled: !!v.enabled,
+              key_id: v["key_id"] ?? "",
+              key_secret_masked: mask(v["key_secret"]),
+              webhook_secret_masked: mask(v["webhook_secret"]),
+              has_key_secret: !!v["key_secret"],
+              has_webhook_secret: !!v["webhook_secret"],
+              enabled: !!v["enabled"],
             },
           });
         } catch (err) {
@@ -70,10 +70,10 @@ export const Route = createFileRoute("/api/admin/settings")({
           const current = (existing?.value ?? {}) as Record<string, unknown>;
           const next = { ...current };
           // Only overwrite secrets when a non-empty value is supplied (empty = keep existing).
-          if (parsed.data.key_id !== undefined) next.key_id = parsed.data.key_id;
-          if (parsed.data.key_secret) next.key_secret = parsed.data.key_secret;
-          if (parsed.data.webhook_secret) next.webhook_secret = parsed.data.webhook_secret;
-          if (parsed.data.enabled !== undefined) next.enabled = parsed.data.enabled;
+          if (parsed.data.key_id !== undefined) next["key_id"] = parsed.data.key_id;
+          if (parsed.data.key_secret) next["key_secret"] = parsed.data.key_secret;
+          if (parsed.data.webhook_secret) next["webhook_secret"] = parsed.data.webhook_secret;
+          if (parsed.data.enabled !== undefined) next["enabled"] = parsed.data.enabled;
 
           const { error } = await admin
             .from("admin_settings")

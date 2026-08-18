@@ -24,7 +24,11 @@ export const Route = createFileRoute("/api/admin/orders")({
           const q = url.searchParams.get("q");
 
           const admin = getAdminClient();
-          let query = admin.from("orders").select("*").order("created_at", { ascending: false }).limit(500);
+          let query = admin
+            .from("orders")
+            .select("*")
+            .order("created_at", { ascending: false })
+            .limit(500);
           if (status) query = query.eq("order_status", status);
           if (payment) query = query.eq("payment_status", payment);
           if (q) {

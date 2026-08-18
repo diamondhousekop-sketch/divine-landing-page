@@ -41,7 +41,11 @@ export const Route = createFileRoute("/api/admin/products")({
         const parsed = CreateInput.safeParse(body);
         if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
         const admin = getAdminClient();
-        const { data, error } = await admin.from("products").insert(parsed.data).select("*").single();
+        const { data, error } = await admin
+          .from("products")
+          .insert(parsed.data)
+          .select("*")
+          .single();
         if (error) return serverError("Could not create product");
         return json({ product: data });
       },

@@ -28,7 +28,8 @@ export const Route = createFileRoute("/api/payment/create")({
 
         try {
           const rp = await getRazorpayClient();
-          if (!rp) return badRequest("Online payment is not configured. Please use Cash on Delivery.");
+          if (!rp)
+            return badRequest("Online payment is not configured. Please use Cash on Delivery.");
 
           const admin = getAdminClient();
           const { data: order, error } = await admin

@@ -24,23 +24,43 @@ function ContentPage() {
   const [msg, setMsg] = useState<string | null>(null);
 
   // Razorpay
-  const [rzp, setRzp] = useState({ key_id: "", key_secret: "", webhook_secret: "", enabled: false });
-  const [rzpInfo, setRzpInfo] = useState<{ has_key_secret: boolean; has_webhook_secret: boolean }>({ has_key_secret: false, has_webhook_secret: false });
+  const [rzp, setRzp] = useState({
+    key_id: "",
+    key_secret: "",
+    webhook_secret: "",
+    enabled: false,
+  });
+  const [rzpInfo, setRzpInfo] = useState<{ has_key_secret: boolean; has_webhook_secret: boolean }>({
+    has_key_secret: false,
+    has_webhook_secret: false,
+  });
   const [savingRzp, setSavingRzp] = useState(false);
   const [rzpMsg, setRzpMsg] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
-        const d = await adminFetch<{ content: { key: string; value: unknown }[] }>("/api/admin/content");
+        const d = await adminFetch<{ content: { key: string; value: unknown }[] }>(
+          "/api/admin/content",
+        );
         const v: Record<string, string> = {};
         for (const row of d.content) {
           v[row.key] = typeof row.value === "string" ? row.value : JSON.stringify(row.value);
         }
         setValues(v);
-        const s = await adminFetch<{ razorpay: { key_id: string; enabled: boolean; has_key_secret: boolean; has_webhook_secret: boolean } }>("/api/admin/settings");
+        const s = await adminFetch<{
+          razorpay: {
+            key_id: string;
+            enabled: boolean;
+            has_key_secret: boolean;
+            has_webhook_secret: boolean;
+          };
+        }>("/api/admin/settings");
         setRzp((prev) => ({ ...prev, key_id: s.razorpay.key_id, enabled: s.razorpay.enabled }));
-        setRzpInfo({ has_key_secret: s.razorpay.has_key_secret, has_webhook_secret: s.razorpay.has_webhook_secret });
+        setRzpInfo({
+          has_key_secret: s.razorpay.has_key_secret,
+          has_webhook_secret: s.razorpay.has_webhook_secret,
+        });
       } catch {
         /* ignore */
       } finally {
@@ -85,7 +105,8 @@ function ContentPage() {
     }
   };
 
-  const inputCls = "mt-1 w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring/40";
+  const inputCls =
+    "mt-1 w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring/40";
 
   return (
     <AdminLayout title="कंटेंट व पेमेंट">
@@ -96,22 +117,45 @@ function ContentPage() {
           {/* Content */}
           <div className="surface-card p-6" data-testid="content-form">
             <h2 className="deva text-lg text-foreground">वेबसाईट मजकूर</h2>
-            <p className="deva mt-1 text-xs text-muted-foreground">हे बदल लँडिंग पेजवर लगेच दिसतील.</p>
+            <p className="deva mt-1 text-xs text-muted-foreground">
+              हे बदल लँडिंग पेजवर लगेच दिसतील.
+            </p>
             <div className="mt-5 space-y-4">
               {FIELDS.map((f) => (
                 <div key={f.key}>
                   <label className="deva text-sm text-foreground">{f.label}</label>
                   {f.multiline ? (
-                    <textarea rows={2} className={inputCls} value={values[f.key] ?? ""} onChange={(e) => setValues({ ...values, [f.key]: e.target.value })} data-testid={`content-${f.key}`} />
+                    <textarea
+                      rows={2}
+                      className={inputCls}
+                      value={values[f.key] ?? ""}
+                      onChange={(e) => setValues({ ...values, [f.key]: e.target.value })}
+                      data-testid={`content-${f.key}`}
+                    />
                   ) : (
-                    <input className={inputCls} value={values[f.key] ?? ""} onChange={(e) => setValues({ ...values, [f.key]: e.target.value })} data-testid={`content-${f.key}`} />
+                    <input
+                      className={inputCls}
+                      value={values[f.key] ?? ""}
+                      onChange={(e) => setValues({ ...values, [f.key]: e.target.value })}
+                      data-testid={`content-${f.key}`}
+                    />
                   )}
                 </div>
               ))}
             </div>
-            {msg && <p className="deva mt-4 text-sm text-[var(--whatsapp)]" data-testid="content-msg">{msg}</p>}
-            <button onClick={saveContent} disabled={saving} className="mt-5 inline-flex items-center gap-2 rounded-full bg-navy px-6 py-2.5 text-sm font-semibold text-gold-light disabled:opacity-70" data-testid="content-save">
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} जतन करा
+            {msg && (
+              <p className="deva mt-4 text-sm text-[var(--whatsapp)]" data-testid="content-msg">
+                {msg}
+              </p>
+            )}
+            <button
+              onClick={saveContent}
+              disabled={saving}
+              className="mt-5 inline-flex items-center gap-2 rounded-full bg-navy px-6 py-2.5 text-sm font-semibold text-gold-light disabled:opacity-70"
+              data-testid="content-save"
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}{" "}
+              जतन करा
             </button>
           </div>
 
@@ -121,29 +165,83 @@ function ContentPage() {
               <CreditCard className="h-5 w-5 text-accent" /> Razorpay पेमेंट सेटिंग्ज
             </h2>
             <p className="deva mt-1 text-xs text-muted-foreground">
-              Razorpay Dashboard मधून keys घ्या. सिक्रेट सुरक्षितपणे सेव्ह होतात (परत दाखवले जात नाहीत).
+              Razorpay Dashboard मधून keys घ्या. सिक्रेट सुरक्षितपणे सेव्ह होतात (परत दाखवले जात
+              नाहीत).
             </p>
             <div className="mt-5 space-y-4">
               <div>
                 <label className="text-sm text-foreground">Key ID (rzp_live_… / rzp_test_…)</label>
-                <input className={inputCls} value={rzp.key_id} onChange={(e) => setRzp({ ...rzp, key_id: e.target.value })} data-testid="rzp-key-id" placeholder="rzp_test_xxxxxxxx" />
+                <input
+                  className={inputCls}
+                  value={rzp.key_id}
+                  onChange={(e) => setRzp({ ...rzp, key_id: e.target.value })}
+                  data-testid="rzp-key-id"
+                  placeholder="rzp_test_xxxxxxxx"
+                />
               </div>
               <div>
-                <label className="text-sm text-foreground">Key Secret {rzpInfo.has_key_secret && <span className="text-[var(--whatsapp)]">(सेट आहे ✓)</span>}</label>
-                <input type="password" className={inputCls} value={rzp.key_secret} onChange={(e) => setRzp({ ...rzp, key_secret: e.target.value })} data-testid="rzp-key-secret" placeholder={rzpInfo.has_key_secret ? "•••••• (बदलण्यासाठी नवीन टाका)" : "key secret"} />
+                <label className="text-sm text-foreground">
+                  Key Secret{" "}
+                  {rzpInfo.has_key_secret && (
+                    <span className="text-[var(--whatsapp)]">(सेट आहे ✓)</span>
+                  )}
+                </label>
+                <input
+                  type="password"
+                  className={inputCls}
+                  value={rzp.key_secret}
+                  onChange={(e) => setRzp({ ...rzp, key_secret: e.target.value })}
+                  data-testid="rzp-key-secret"
+                  placeholder={
+                    rzpInfo.has_key_secret ? "•••••• (बदलण्यासाठी नवीन टाका)" : "key secret"
+                  }
+                />
               </div>
               <div>
-                <label className="text-sm text-foreground">Webhook Secret {rzpInfo.has_webhook_secret && <span className="text-[var(--whatsapp)]">(सेट आहे ✓)</span>}</label>
-                <input type="password" className={inputCls} value={rzp.webhook_secret} onChange={(e) => setRzp({ ...rzp, webhook_secret: e.target.value })} data-testid="rzp-webhook-secret" placeholder={rzpInfo.has_webhook_secret ? "•••••• (बदलण्यासाठी नवीन टाका)" : "webhook secret"} />
+                <label className="text-sm text-foreground">
+                  Webhook Secret{" "}
+                  {rzpInfo.has_webhook_secret && (
+                    <span className="text-[var(--whatsapp)]">(सेट आहे ✓)</span>
+                  )}
+                </label>
+                <input
+                  type="password"
+                  className={inputCls}
+                  value={rzp.webhook_secret}
+                  onChange={(e) => setRzp({ ...rzp, webhook_secret: e.target.value })}
+                  data-testid="rzp-webhook-secret"
+                  placeholder={
+                    rzpInfo.has_webhook_secret ? "•••••• (बदलण्यासाठी नवीन टाका)" : "webhook secret"
+                  }
+                />
               </div>
               <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={rzp.enabled} onChange={(e) => setRzp({ ...rzp, enabled: e.target.checked })} data-testid="rzp-enabled" />
+                <input
+                  type="checkbox"
+                  checked={rzp.enabled}
+                  onChange={(e) => setRzp({ ...rzp, enabled: e.target.checked })}
+                  data-testid="rzp-enabled"
+                />
                 <span className="deva">ऑनलाईन पेमेंट सुरू करा</span>
               </label>
             </div>
-            {rzpMsg && <p className="deva mt-4 text-sm text-[var(--whatsapp)]" data-testid="rzp-msg">{rzpMsg}</p>}
-            <button onClick={saveRzp} disabled={savingRzp} className="mt-5 inline-flex items-center gap-2 rounded-full bg-navy px-6 py-2.5 text-sm font-semibold text-gold-light disabled:opacity-70" data-testid="rzp-save">
-              {savingRzp ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} जतन करा
+            {rzpMsg && (
+              <p className="deva mt-4 text-sm text-[var(--whatsapp)]" data-testid="rzp-msg">
+                {rzpMsg}
+              </p>
+            )}
+            <button
+              onClick={saveRzp}
+              disabled={savingRzp}
+              className="mt-5 inline-flex items-center gap-2 rounded-full bg-navy px-6 py-2.5 text-sm font-semibold text-gold-light disabled:opacity-70"
+              data-testid="rzp-save"
+            >
+              {savingRzp ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}{" "}
+              जतन करा
             </button>
           </div>
         </div>

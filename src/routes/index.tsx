@@ -126,7 +126,7 @@ function Index() {
   const discount = compare && compare > price ? Math.round((1 - price / compare) * 100) : null;
 
   // Split headline at the last comma so the tail renders in gold (matches original).
-  const headline = content.hero_headline || "स्वामींचा आशीर्वाद, तुमच्या हातात";
+  const headline = content["hero_headline"] || "स्वामींचा आशीर्वाद, तुमच्या हातात";
   const ci = headline.lastIndexOf(",");
   const headHead = ci > -1 ? headline.slice(0, ci + 1) : headline;
   const headTail = ci > -1 ? headline.slice(ci + 1).trim() : "";
@@ -134,9 +134,11 @@ function Index() {
   return (
     <main className="relative overflow-x-hidden pb-24 md:pb-0">
       {/* ANNOUNCEMENT BAR */}
-      {content.announcement && (
+      {content["announcement"] && (
         <div className="bg-maroon px-4 py-2 text-center" data-testid="announcement-bar">
-          <p className="deva text-xs text-primary-foreground md:text-sm">{content.announcement}</p>
+          <p className="deva text-xs text-primary-foreground md:text-sm">
+            {content["announcement"]}
+          </p>
         </div>
       )}
 
@@ -160,7 +162,7 @@ function Index() {
         <div className="mx-auto max-w-4xl text-center">
           <Reveal>
             <p className="deva inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-xs tracking-wide text-primary md:text-sm">
-              {content.hero_badge || "ॐ श्री स्वामी समर्थ · Diamond House, कोल्हापूर"}
+              {content["hero_badge"] || "ॐ श्री स्वामी समर्थ · Diamond House, कोल्हापूर"}
             </p>
             <h1 className="deva mt-6 text-[2.5rem] leading-[1.1] font-normal text-primary md:text-7xl">
               {headHead}
@@ -173,7 +175,7 @@ function Index() {
             </h1>
             <GoldSwash className="mt-4 w-56" />
             <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-lg">
-              {content.hero_subheadline ||
+              {content["hero_subheadline"] ||
                 "Kolhapur's Trusted Icchapurti Lucky Stone — 25+ Years of Genuine Blessings"}
             </p>
           </Reveal>
@@ -238,8 +240,8 @@ function Index() {
             ✓
           </span>
           <p className="deva text-sm text-gold-light md:text-base">
-            श्री स्वामी समर्थ आशीर्वादित <span className="text-gold">|</span> महालक्ष्मी
-            मंदिरामागे, जोतिबा रोड, कोल्हापूर
+            श्री स्वामी समर्थ आशीर्वादित <span className="text-gold">|</span> महालक्ष्मी मंदिरामागे,
+            जोतिबा रोड, कोल्हापूर
           </p>
         </div>
       </section>
@@ -322,7 +324,10 @@ function Index() {
           </Reveal>
         </div>
         <Reveal delay={100}>
-          <div className="mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-4 md:justify-center md:px-8" data-testid="testimonials-list">
+          <div
+            className="mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-4 md:justify-center md:px-8"
+            data-testid="testimonials-list"
+          >
             {testimonials.map((t, i) => (
               <article
                 key={`${t.customer_name}-${i}`}
@@ -347,7 +352,8 @@ function Index() {
                   <div className="text-sm tracking-widest text-accent">★★★★★</div>
                   <p className="deva mt-2 text-sm leading-relaxed text-foreground">“{t.quote}”</p>
                   <p className="deva mt-3 text-xs text-muted-foreground">
-                    {t.customer_name}{t.customer_city ? `, ${t.customer_city}` : ""}
+                    {t.customer_name}
+                    {t.customer_city ? `, ${t.customer_city}` : ""}
                   </p>
                 </div>
               </article>
@@ -396,9 +402,16 @@ function Index() {
               Diamond House · Kolhapur · Since 1999
             </p>
             <div className="mt-6 flex items-end gap-3">
-              <span className="font-display text-5xl font-bold text-navy md:text-6xl" data-testid="product-price">₹{price.toLocaleString("en-IN")}</span>
+              <span
+                className="font-display text-5xl font-bold text-navy md:text-6xl"
+                data-testid="product-price"
+              >
+                ₹{price.toLocaleString("en-IN")}
+              </span>
               {compare && (
-                <span className="mb-2 text-lg text-muted-foreground line-through">₹{compare.toLocaleString("en-IN")}</span>
+                <span className="mb-2 text-lg text-muted-foreground line-through">
+                  ₹{compare.toLocaleString("en-IN")}
+                </span>
               )}
               {discount && (
                 <span className="deva mb-2 rounded-full bg-primary px-3 py-1 text-xs text-primary-foreground">
@@ -514,8 +527,14 @@ function Index() {
       <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/95 px-4 py-3 backdrop-blur md:hidden">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="font-display text-xl font-bold text-navy">₹{price.toLocaleString("en-IN")}</p>
-            {compare && <p className="text-[11px] text-muted-foreground line-through">₹{compare.toLocaleString("en-IN")}</p>}
+            <p className="font-display text-xl font-bold text-navy">
+              ₹{price.toLocaleString("en-IN")}
+            </p>
+            {compare && (
+              <p className="text-[11px] text-muted-foreground line-through">
+                ₹{compare.toLocaleString("en-IN")}
+              </p>
+            )}
           </div>
           <CtaButton className="flex-1 px-6">आत्ताच मागवा</CtaButton>
         </div>

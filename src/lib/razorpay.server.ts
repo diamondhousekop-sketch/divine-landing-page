@@ -32,15 +32,18 @@ export async function getRazorpayConfig(): Promise<RazorpayConfig | null> {
     // fall through to env
   }
 
-  const key_id = cfg.key_id || process.env.RAZORPAY_KEY_ID || "";
-  const key_secret = cfg.key_secret || process.env.RAZORPAY_KEY_SECRET || "";
-  const webhook_secret = cfg.webhook_secret || process.env.RAZORPAY_WEBHOOK_SECRET || "";
+  const key_id = cfg.key_id || process.env["RAZORPAY_KEY_ID"] || "";
+  const key_secret = cfg.key_secret || process.env["RAZORPAY_KEY_SECRET"] || "";
+  const webhook_secret = cfg.webhook_secret || process.env["RAZORPAY_WEBHOOK_SECRET"] || "";
 
   if (isPlaceholder(key_id) || isPlaceholder(key_secret)) return null;
   return { key_id, key_secret, webhook_secret, enabled: true };
 }
 
-export async function getRazorpayClient(): Promise<{ client: Razorpay; config: RazorpayConfig } | null> {
+export async function getRazorpayClient(): Promise<{
+  client: Razorpay;
+  config: RazorpayConfig;
+} | null> {
   const config = await getRazorpayConfig();
   if (!config) return null;
   return {
@@ -66,7 +69,11 @@ export function verifyPaymentSignature(params: {
   }
 }
 
-export function verifyWebhookSignature(rawBody: string, signature: string, secret: string): boolean {
+export function verifyWebhookSignature(
+  rawBody: string,
+  signature: string,
+  secret: string,
+): boolean {
   if (!secret) return false;
   const expected = crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
   try {

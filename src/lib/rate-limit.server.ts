@@ -30,11 +30,8 @@ export function clientIp(request: Request): string {
 }
 
 export function tooManyRequests(retryAfter: number) {
-  return new Response(
-    JSON.stringify({ error: "Too many requests. Please try again shortly." }),
-    {
-      status: 429,
-      headers: { "content-type": "application/json", "retry-after": String(retryAfter) },
-    },
-  );
+  return new Response(JSON.stringify({ error: "Too many requests. Please try again shortly." }), {
+    status: 429,
+    headers: { "content-type": "application/json", "retry-after": String(retryAfter) },
+  });
 }

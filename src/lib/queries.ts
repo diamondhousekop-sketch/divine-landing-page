@@ -11,7 +11,9 @@ import {
 // run both during SSR (route loaders) and on the client. Everything degrades
 // gracefully to fallbacks so the landing page always renders.
 
-export async function getActiveProduct(): Promise<Pick<Product, "id" | "name" | "price" | "compare_at_price">> {
+export async function getActiveProduct(): Promise<
+  Pick<Product, "id" | "name" | "price" | "compare_at_price">
+> {
   try {
     const { data } = await supabase
       .from("products")
@@ -36,7 +38,8 @@ export async function getTestimonials(): Promise<
       .select("customer_name,customer_city,quote")
       .eq("is_active", true)
       .order("display_order", { ascending: true });
-    if (data && data.length) return data as Pick<Testimonial, "customer_name" | "customer_city" | "quote">[];
+    if (data && data.length)
+      return data as Pick<Testimonial, "customer_name" | "customer_city" | "quote">[];
   } catch {
     /* ignore */
   }
@@ -52,7 +55,7 @@ export async function getSiteContent(): Promise<Record<string, string>> {
         const v = row.value;
         if (typeof v === "string") content[row.key] = v;
         else if (v && typeof v === "object" && "text" in (v as Record<string, unknown>)) {
-          content[row.key] = String((v as Record<string, unknown>).text);
+          content[row.key] = String((v as Record<string, unknown>)["text"]);
         }
       }
     }

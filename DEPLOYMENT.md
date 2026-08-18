@@ -64,8 +64,9 @@ The app cannot create/checkout/admin until the schema exists.
    - Seeds 1 product (₹1,100 / ₹2,100), 4 testimonials, hero/announcement content.
 3. Create the **admin user** → Authentication → Users → *Add user* (email + password,
    auto-confirm). Any authenticated Supabase user is treated as store admin.
-   - A demo admin has already been provisioned for this project:
-     `admin@diamondhouse.in` / `DiamondHouse@2026` (change the password before go-live).
+   - Use your own email + a strong password here — do not reuse any password that
+     was ever committed to source control. Once logged in, you can change both the
+     email and password any time from **/admin/account** in the app itself.
 
 Credentials used (already in `.env`):
 - `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` — public, client-safe.
@@ -125,10 +126,20 @@ bun run start             # === node .output/server/index.mjs
 
 Hostinger hPanel → **Websites → Node.js**.
 
+> ⚠️ **Critical order-of-operations:** `VITE_*` variables (Supabase URL/anon key)
+> are baked into the app **at build time**, not read at server start. If `.env`
+> is missing or incomplete when `npm run build` runs, every page will fail with
+> a 500 error at runtime — even if you add the env vars afterward and only
+> restart the server. Always create/upload `.env` **before** running the build
+> command, and re-run the build any time a `VITE_*` value changes.
+
 1. **Node version:** 20 LTS or newer (a `ws` WebSocket polyfill is bundled so
    Supabase realtime works on Node 20; Node 22+ works natively).
-2. Upload the repo (Git deploy or file manager). Ensure `.env` is present in the
-   app root **or** set the variables in hPanel's environment section.
+2. Upload the repo (Git deploy or file manager). Create `.env` in the app root
+   **first** (from `.env.example`, filled with real values) — before building.
+   If hPanel's environment-variables section is used instead of a committed
+   `.env` file, make sure those variables are set **before** the build step
+   runs, not only before start.
 3. **Build command:** `npm install && npm run build`   (or `bun install && bun run build`)
 4. **Start / entry file:** `.output/server/index.mjs`
    - App start command: `node .output/server/index.mjs`
@@ -141,6 +152,9 @@ Hostinger hPanel → **Websites → Node.js**.
    ```
 6. **Domain + SSL:** point your domain to the Node app in hPanel and enable the
    free SSL certificate. Set `SITE_URL=https://your-domain` (used in email links).
+7. **Verify after every deploy:** open `/`, `/checkout`, and `/admin/login` in a
+   browser. A 500 on all three almost always means `.env` wasn't present at
+   build time — re-run the build with `.env` in place and restart.
 
 ### Env vars on Hostinger
 Set every key from `.env.example`. Only the `VITE_*` ones reach the browser;
@@ -152,7 +166,7 @@ Set every key from `.env.example`. Only the `VITE_*` ones reach the browser;
 ## 6. Go-live checklist
 
 - [ ] Ran `supabase/migrations/0001_init.sql` in the Supabase SQL Editor
-- [ ] Created a real admin user (and changed the demo password)
+- [ ] Created a real admin user with your own email + a strong, unique password
 - [ ] Set all `.env` values on Hostinger (or committed nothing secret — `.env` is gitignored)
 - [ ] Verified `bun run build` produces `.output/server/index.mjs`
 - [ ] `node .output/server/index.mjs` boots and serves `/`
