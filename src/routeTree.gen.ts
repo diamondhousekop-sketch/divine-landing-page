@@ -16,6 +16,7 @@ import { Route as TrackRouteImport } from './routes/track'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAccountRouteImport } from './routes/admin/account'
 import { Route as AdminContentRouteImport } from './routes/admin/content'
+import { Route as AdminIntegrationsRouteImport } from './routes/admin/integrations'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
 import { Route as AdminProductsRouteImport } from './routes/admin/products'
@@ -28,6 +29,7 @@ import { Route as ApiAdminInvoiceRouteImport } from './routes/api/admin/invoice'
 import { Route as ApiAdminOrdersRouteImport } from './routes/api/admin/orders'
 import { Route as ApiAdminProductsRouteImport } from './routes/api/admin/products'
 import { Route as ApiAdminSettingsRouteImport } from './routes/api/admin/settings'
+import { Route as ApiAdminStoreSettingsRouteImport } from './routes/api/admin/store-settings'
 import { Route as ApiAdminTestimonialsRouteImport } from './routes/api/admin/testimonials'
 import { Route as ApiPaymentCreateRouteImport } from './routes/api/payment/create'
 import { Route as ApiPaymentVerifyRouteImport } from './routes/api/payment/verify'
@@ -66,6 +68,11 @@ const AdminAccountRoute = AdminAccountRouteImport.update({
 const AdminContentRoute = AdminContentRouteImport.update({
   id: '/admin/content',
   path: '/admin/content',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIntegrationsRoute = AdminIntegrationsRouteImport.update({
+  id: '/admin/integrations',
+  path: '/admin/integrations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
@@ -128,6 +135,11 @@ const ApiAdminSettingsRoute = ApiAdminSettingsRouteImport.update({
   path: '/api/admin/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminStoreSettingsRoute = ApiAdminStoreSettingsRouteImport.update({
+  id: '/api/admin/store-settings',
+  path: '/api/admin/store-settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminTestimonialsRoute = ApiAdminTestimonialsRouteImport.update({
   id: '/api/admin/testimonials',
   path: '/api/admin/testimonials',
@@ -156,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/track': typeof TrackRoute
   '/admin/account': typeof AdminAccountRoute
   '/admin/content': typeof AdminContentRoute
+  '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
@@ -169,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/orders': typeof ApiAdminOrdersRoute
   '/api/admin/products': typeof ApiAdminProductsRoute
   '/api/admin/settings': typeof ApiAdminSettingsRoute
+  '/api/admin/store-settings': typeof ApiAdminStoreSettingsRoute
   '/api/admin/testimonials': typeof ApiAdminTestimonialsRoute
   '/api/payment/create': typeof ApiPaymentCreateRoute
   '/api/payment/verify': typeof ApiPaymentVerifyRoute
@@ -181,6 +195,7 @@ export interface FileRoutesByTo {
   '/track': typeof TrackRoute
   '/admin/account': typeof AdminAccountRoute
   '/admin/content': typeof AdminContentRoute
+  '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
@@ -194,6 +209,7 @@ export interface FileRoutesByTo {
   '/api/admin/orders': typeof ApiAdminOrdersRoute
   '/api/admin/products': typeof ApiAdminProductsRoute
   '/api/admin/settings': typeof ApiAdminSettingsRoute
+  '/api/admin/store-settings': typeof ApiAdminStoreSettingsRoute
   '/api/admin/testimonials': typeof ApiAdminTestimonialsRoute
   '/api/payment/create': typeof ApiPaymentCreateRoute
   '/api/payment/verify': typeof ApiPaymentVerifyRoute
@@ -207,6 +223,7 @@ export interface FileRoutesById {
   '/track': typeof TrackRoute
   '/admin/account': typeof AdminAccountRoute
   '/admin/content': typeof AdminContentRoute
+  '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
@@ -220,6 +237,7 @@ export interface FileRoutesById {
   '/api/admin/orders': typeof ApiAdminOrdersRoute
   '/api/admin/products': typeof ApiAdminProductsRoute
   '/api/admin/settings': typeof ApiAdminSettingsRoute
+  '/api/admin/store-settings': typeof ApiAdminStoreSettingsRoute
   '/api/admin/testimonials': typeof ApiAdminTestimonialsRoute
   '/api/payment/create': typeof ApiPaymentCreateRoute
   '/api/payment/verify': typeof ApiPaymentVerifyRoute
@@ -234,6 +252,7 @@ export interface FileRouteTypes {
     | '/track'
     | '/admin/account'
     | '/admin/content'
+    | '/admin/integrations'
     | '/admin/login'
     | '/admin/orders'
     | '/admin/products'
@@ -247,6 +266,7 @@ export interface FileRouteTypes {
     | '/api/admin/orders'
     | '/api/admin/products'
     | '/api/admin/settings'
+    | '/api/admin/store-settings'
     | '/api/admin/testimonials'
     | '/api/payment/create'
     | '/api/payment/verify'
@@ -259,6 +279,7 @@ export interface FileRouteTypes {
     | '/track'
     | '/admin/account'
     | '/admin/content'
+    | '/admin/integrations'
     | '/admin/login'
     | '/admin/orders'
     | '/admin/products'
@@ -272,6 +293,7 @@ export interface FileRouteTypes {
     | '/api/admin/orders'
     | '/api/admin/products'
     | '/api/admin/settings'
+    | '/api/admin/store-settings'
     | '/api/admin/testimonials'
     | '/api/payment/create'
     | '/api/payment/verify'
@@ -284,6 +306,7 @@ export interface FileRouteTypes {
     | '/track'
     | '/admin/account'
     | '/admin/content'
+    | '/admin/integrations'
     | '/admin/login'
     | '/admin/orders'
     | '/admin/products'
@@ -297,6 +320,7 @@ export interface FileRouteTypes {
     | '/api/admin/orders'
     | '/api/admin/products'
     | '/api/admin/settings'
+    | '/api/admin/store-settings'
     | '/api/admin/testimonials'
     | '/api/payment/create'
     | '/api/payment/verify'
@@ -310,6 +334,7 @@ export interface RootRouteChildren {
   TrackRoute: typeof TrackRoute
   AdminAccountRoute: typeof AdminAccountRoute
   AdminContentRoute: typeof AdminContentRoute
+  AdminIntegrationsRoute: typeof AdminIntegrationsRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
   AdminProductsRoute: typeof AdminProductsRoute
@@ -323,6 +348,7 @@ export interface RootRouteChildren {
   ApiAdminOrdersRoute: typeof ApiAdminOrdersRoute
   ApiAdminProductsRoute: typeof ApiAdminProductsRoute
   ApiAdminSettingsRoute: typeof ApiAdminSettingsRoute
+  ApiAdminStoreSettingsRoute: typeof ApiAdminStoreSettingsRoute
   ApiAdminTestimonialsRoute: typeof ApiAdminTestimonialsRoute
   ApiPaymentCreateRoute: typeof ApiPaymentCreateRoute
   ApiPaymentVerifyRoute: typeof ApiPaymentVerifyRoute
@@ -378,6 +404,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/content'
       fullPath: '/admin/content'
       preLoaderRoute: typeof AdminContentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/integrations': {
+      id: '/admin/integrations'
+      path: '/admin/integrations'
+      fullPath: '/admin/integrations'
+      preLoaderRoute: typeof AdminIntegrationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/login': {
@@ -464,6 +497,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminSettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/store-settings': {
+      id: '/api/admin/store-settings'
+      path: '/api/admin/store-settings'
+      fullPath: '/api/admin/store-settings'
+      preLoaderRoute: typeof ApiAdminStoreSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/testimonials': {
       id: '/api/admin/testimonials'
       path: '/api/admin/testimonials'
@@ -502,6 +542,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrackRoute: TrackRoute,
   AdminAccountRoute: AdminAccountRoute,
   AdminContentRoute: AdminContentRoute,
+  AdminIntegrationsRoute: AdminIntegrationsRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminOrdersRoute: AdminOrdersRoute,
   AdminProductsRoute: AdminProductsRoute,
@@ -515,6 +556,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminOrdersRoute: ApiAdminOrdersRoute,
   ApiAdminProductsRoute: ApiAdminProductsRoute,
   ApiAdminSettingsRoute: ApiAdminSettingsRoute,
+  ApiAdminStoreSettingsRoute: ApiAdminStoreSettingsRoute,
   ApiAdminTestimonialsRoute: ApiAdminTestimonialsRoute,
   ApiPaymentCreateRoute: ApiPaymentCreateRoute,
   ApiPaymentVerifyRoute: ApiPaymentVerifyRoute,

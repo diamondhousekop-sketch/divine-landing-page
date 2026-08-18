@@ -58,6 +58,23 @@ export const Route = createFileRoute("/api/orders")({
 
           if (prodErr) return serverError("Could not load product");
           if (!product) return badRequest("Product is not available");
+          if (Number(product.stock_quantity) <= 0) {
+            return badRequest("Product is out of stock");
+          }
+
+          // COD is ON by default; the owner can disable it from Admin → Settings.
+          if (input.payment_method === "cod") {
+            const { data: cs } = await admin
+              .from("admin_settings")
+              .select("value")
+              .eq("key", "checkout")
+              .maybeSingle();
+            const codEnabled =
+              (cs?.value as { cod_enabled?: boolean } | undefined)?.cod_enabled !== false;
+            if (!codEnabled) {
+              return badRequest("Cash on Delivery is currently unavailable. Please pay online.");
+            }
+          }
 
           const total = Number(product.price) * input.quantity;
           const orderNumber = generateOrderNumber();

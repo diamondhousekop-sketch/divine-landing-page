@@ -6,6 +6,7 @@ import {
   Package,
   MessageSquareQuote,
   Settings2,
+  SlidersHorizontal,
   UserCog,
   LogOut,
   Menu,
@@ -21,6 +22,7 @@ const NAV = [
   { to: "/admin/products", label: "प्रॉडक्ट्स", en: "Products", icon: Package },
   { to: "/admin/testimonials", label: "अनुभव", en: "Testimonials", icon: MessageSquareQuote },
   { to: "/admin/content", label: "कंटेंट", en: "Content & Payments", icon: Settings2 },
+  { to: "/admin/integrations", label: "सेटिंग्ज", en: "Integrations", icon: SlidersHorizontal },
   { to: "/admin/account", label: "अकाउंट", en: "Account", icon: UserCog },
 ] as const;
 

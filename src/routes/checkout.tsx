@@ -48,6 +48,7 @@ function Checkout() {
   const { product } = Route.useLoaderData();
   const navigate = useNavigate();
   const [onlineEnabled, setOnlineEnabled] = useState(false);
+  const [codEnabled, setCodEnabled] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -55,6 +56,7 @@ function Checkout() {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -64,9 +66,18 @@ function Checkout() {
   useEffect(() => {
     fetch("/api/config")
       .then((r) => r.json())
-      .then((d) => setOnlineEnabled(!!d.online_enabled))
-      .catch(() => setOnlineEnabled(false));
-  }, []);
+      .then((d) => {
+        setOnlineEnabled(!!d.online_enabled);
+        const cod = d.cod_enabled !== false;
+        setCodEnabled(cod);
+        // If the owner turned COD off, default to online payment.
+        if (!cod && d.online_enabled) setValue("payment_method", "online");
+      })
+      .catch(() => {
+        setOnlineEnabled(false);
+        setCodEnabled(true);
+      });
+  }, [setValue]);
 
   const qty = Number(watch("quantity") || 1);
   const total = product.price * qty;
@@ -269,16 +280,19 @@ function Checkout() {
 
             <h2 className="deva mt-8 text-xl text-foreground">पेमेंट पद्धत</h2>
             <div className="mt-4 space-y-3">
-              <label className="surface-card flex cursor-pointer items-center gap-3 px-4 py-3">
+              <label
+                className={`surface-card flex items-center gap-3 px-4 py-3 ${codEnabled ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}
+              >
                 <input
                   type="radio"
                   value="cod"
-                  defaultChecked
+                  disabled={!codEnabled}
                   data-testid="payment-cod"
                   {...register("payment_method")}
                 />
                 <span className="deva text-sm text-foreground">
                   Cash on Delivery — घरपोच आल्यावर पैसे द्या 🚚
+                  {!codEnabled && " (सध्या बंद)"}
                 </span>
               </label>
               <label

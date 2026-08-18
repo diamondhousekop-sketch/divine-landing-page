@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Reveal } from "@/components/Reveal";
 import { GoldSwash } from "@/components/GoldSwash";
 import { getActiveProduct, getTestimonials, getSiteContent } from "@/lib/queries";
+import { track } from "@/lib/analytics";
 import templeBg from "@/assets/temple-bg.jpg";
 import stoneMacro from "@/assets/stone-macro.jpg";
 import stoneHand from "@/assets/stone-hand.jpg";
@@ -120,6 +121,16 @@ function SectionTitle({ children, sub }: { children: React.ReactNode; sub?: stri
 function Index() {
   const { product, testimonials, content } = Route.useLoaderData();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+  // Fire ViewContent / view_item once when the landing page (hero product) loads.
+  useEffect(() => {
+    track("ViewContent", "view_item", {
+      currency: "INR",
+      value: Number(product.price),
+      content_name: product.name,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const price = Number(product.price);
   const compare = product.compare_at_price ? Number(product.compare_at_price) : null;
