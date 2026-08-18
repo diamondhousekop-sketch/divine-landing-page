@@ -35,7 +35,9 @@ export const Route = createFileRoute("/api/track")({
         const admin = getAdminClient();
         const { data } = await admin
           .from("orders")
-          .select("order_number,customer_name,customer_phone,customer_pincode,order_status,payment_status,payment_method,quantity,total_amount,created_at,updated_at")
+          .select(
+            "order_number,customer_name,customer_phone,customer_pincode,order_status,payment_status,payment_method,quantity,total_amount,created_at,updated_at",
+          )
           .eq("order_number", parsed.data.order_number.trim())
           .maybeSingle();
 

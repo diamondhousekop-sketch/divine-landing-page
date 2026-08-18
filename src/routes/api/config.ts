@@ -28,10 +28,10 @@ export const Route = createFileRoute("/api/config")({
         return json({
           online_enabled: !!cfg,
           razorpay_key_id: cfg?.key_id ?? "",
-          meta_pixel_id: marketing.meta_pixel_id ?? "",
-          ga4_id: marketing.ga4_id ?? "",
-          gtm_id: marketing.gtm_id ?? "",
-          gsc_verification: marketing.gsc_verification ?? "",
+          meta_pixel_id: marketing["meta_pixel_id"] ?? "",
+          ga4_id: marketing["ga4_id"] ?? "",
+          gtm_id: marketing["gtm_id"] ?? "",
+          gsc_verification: marketing["gsc_verification"] ?? "",
         });
       },
     },

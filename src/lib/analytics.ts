@@ -30,12 +30,13 @@ function injectScript(src: string, before = false) {
 }
 
 function initPixel(id: string) {
-  if (window.fbq) return;
+  // Dedup is already handled by the __dhAnalyticsLoaded guard in bootAnalytics().
+  const w = window as unknown as Record<string, (...args: unknown[]) => void>;
   /* eslint-disable */
-  (function (f: any, b, e, v) {
+  (function (f: any, b: any, e: any, v: any) {
     if (f.fbq) return;
-    const n: any = (f.fbq = function () {
-      n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+    const n: any = (f.fbq = function (...args: unknown[]) {
+      n.callMethod ? n.callMethod.apply(n, args) : n.queue.push(args);
     });
     if (!f._fbq) f._fbq = n;
     n.push = n;
@@ -45,19 +46,19 @@ function initPixel(id: string) {
   })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
   /* eslint-enable */
   injectScript("https://connect.facebook.net/en_US/fbevents.js");
-  window.fbq?.("init", id);
-  window.fbq?.("track", "PageView");
+  w["fbq"]?.("init", id);
+  w["fbq"]?.("track", "PageView");
 }
 
 function initGA4(id: string) {
+  const w = window as unknown as Record<string, (...args: unknown[]) => void>;
   injectScript(`https://www.googletagmanager.com/gtag/js?id=${id}`);
   window.dataLayer = window.dataLayer || [];
-  window.gtag = function () {
-    // eslint-disable-next-line prefer-rest-params
-    window.dataLayer!.push(arguments);
-  } as never;
-  window.gtag("js", new Date());
-  window.gtag("config", id);
+  w["gtag"] = function (...args: unknown[]) {
+    window.dataLayer!.push(args);
+  };
+  w["gtag"]("js", new Date());
+  w["gtag"]("config", id);
 }
 
 function initGTM(id: string) {
