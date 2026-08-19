@@ -90,6 +90,29 @@ export const Route = createFileRoute("/api/admin/orders")({
           return serverError();
         }
       },
+
+      // Delete an order permanently. Invoice numbers already issued are not
+      // reused/shifted (invoice_number lives on the order row itself, so
+      // deleting an order simply removes that row — the sequence for future
+      // orders is unaffected).
+      DELETE: async ({ request }) => {
+        const user = await requireAdmin(request);
+        if (!user) return unauthorized();
+        try {
+          const url = new URL(request.url);
+          const id = url.searchParams.get("id");
+          if (!id || !z.string().uuid().safeParse(id).success) {
+            return badRequest("Valid order id required");
+          }
+          const admin = getAdminClient();
+          const { error } = await admin.from("orders").delete().eq("id", id);
+          if (error) return serverError("Could not delete order");
+          return json({ deleted: true, id });
+        } catch (err) {
+          console.error("[admin/orders DELETE]", err);
+          return serverError();
+        }
+      },
     },
   },
 });

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Search, RefreshCw, MessageCircle, FileDown, Send, Download } from "lucide-react";
+import { Search, RefreshCw, MessageCircle, FileDown, Send, Download, Trash2 } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { adminFetch, adminDownload } from "@/lib/admin-api";
 import type { Order, OrderStatus, PaymentStatus } from "@/lib/types";
@@ -170,6 +170,20 @@ function OrdersPage() {
     URL.revokeObjectURL(url);
   };
 
+  const deleteOrder = async (o: Order) => {
+    if (!confirm(`ऑर्डर ${o.order_number} कायमची डिलीट करायची? ही क्रिया पूर्ववत करता येणार नाही.`))
+      return;
+    setBusyId(o.id);
+    try {
+      await adminFetch(`/api/admin/orders?id=${o.id}`, { method: "DELETE" });
+      setOrders((prev) => prev.filter((x) => x.id !== o.id));
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Delete failed");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   const actionBtns = (o: Order) => (
     <div className="flex flex-wrap items-center gap-1.5">
       <a
@@ -199,6 +213,15 @@ function OrdersPage() {
         className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-navy hover:bg-secondary disabled:opacity-50"
       >
         <Send className="h-4 w-4" />
+      </button>
+      <button
+        onClick={() => deleteOrder(o)}
+        disabled={busyId === o.id}
+        title="ऑर्डर डिलीट करा"
+        data-testid={`order-delete-${o.order_number}`}
+        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-destructive/50 text-destructive hover:bg-destructive/10 disabled:opacity-50"
+      >
+        <Trash2 className="h-4 w-4" />
       </button>
     </div>
   );

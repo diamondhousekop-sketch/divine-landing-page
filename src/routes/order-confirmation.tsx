@@ -76,68 +76,7 @@ function OrderConfirmation() {
     { icon: Home, title: "घरपोच डिलिव्हरी", desc: "साधारण ३–५ कामकाजाच्या दिवसांत पोहोच." },
   ];
 
-  // ── COD: keep the simpler summary ──
-  if (!isOnline) {
-    return (
-      <main className="relative flex min-h-screen items-center justify-center overflow-x-hidden px-5 py-16">
-        <div
-          className="pointer-events-none absolute inset-0 -z-10"
-          style={{ background: "var(--gradient-glow)", opacity: 0.4 }}
-        />
-        <div
-          className="surface-card w-full max-w-lg p-8 text-center md:p-10"
-          data-testid="confirmation-card"
-        >
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--whatsapp)_18%,transparent)]">
-            <CheckCircle2 className="h-9 w-9 text-[var(--whatsapp)]" />
-          </div>
-          <h1 className="deva mt-6 text-3xl font-normal text-primary">धन्यवाद! 🙏</h1>
-          <GoldSwash className="mx-auto mt-3 w-40" />
-          <p className="deva mt-4 text-base leading-relaxed text-foreground">
-            तुमची ऑर्डर यशस्वीरित्या नोंदवली गेली आहे. आमची टीम लवकरच तुम्हाला फोनवर संपर्क करेल.
-          </p>
-          {order && (
-            <div className="mt-6 rounded-2xl border border-accent/40 bg-card px-5 py-4">
-              <p className="deva text-xs text-muted-foreground">ऑर्डर क्रमांक</p>
-              <p
-                className="font-display text-2xl font-bold text-navy"
-                data-testid="confirmation-order-number"
-              >
-                {order}
-              </p>
-            </div>
-          )}
-          <div className="mt-8 flex flex-col gap-3">
-            <a
-              href={`https://wa.me/${WA_PHONE}?text=${waText}`}
-              target="_blank"
-              rel="noreferrer"
-              data-testid="whatsapp-support"
-              className="deva inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-[var(--whatsapp)] px-6 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
-            >
-              <MessageCircle className="h-4 w-4" /> WhatsApp वर संपर्क करा
-            </a>
-            <Link
-              to="/track"
-              search={order ? { order } : {}}
-              className="deva inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-border px-6 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
-              data-testid="track-link"
-            >
-              <MapPin className="h-4 w-4" /> ऑर्डरचा मागोवा घ्या
-            </Link>
-            <Link
-              to="/"
-              className="deva mt-1 text-sm text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
-            >
-              मुख्य पानावर परत जा
-            </Link>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  // ── Online paid: rich success journey ──
+  // ── Full success journey for BOTH COD and online orders ──
   return (
     <main className="relative min-h-screen overflow-x-hidden px-5 py-12 md:py-16">
       <div
@@ -150,7 +89,7 @@ function OrderConfirmation() {
             <CheckCircle2 className="h-9 w-9 text-[var(--whatsapp)]" />
           </div>
           <h1 className="deva mt-5 text-3xl font-normal text-primary md:text-4xl">
-            पेमेंट यशस्वी! धन्यवाद 🙏
+            {isOnline ? "पेमेंट यशस्वी! धन्यवाद 🙏" : "धन्यवाद! ऑर्डर नोंदवली 🙏"}
           </h1>
           <GoldSwash className="mx-auto mt-3 w-44" />
           <p className="deva mx-auto mt-4 max-w-md text-base leading-relaxed text-muted-foreground">
@@ -205,13 +144,17 @@ function OrderConfirmation() {
             </div>
             {amt != null && (
               <div className="flex justify-between">
-                <span className="deva text-muted-foreground">भरलेली रक्कम</span>
+                <span className="deva text-muted-foreground">
+                  {isOnline ? "भरलेली रक्कम" : "रक्कम"}
+                </span>
                 <span className="font-display text-lg font-bold text-navy">₹{amt}</span>
               </div>
             )}
             <div className="flex justify-between">
               <span className="deva text-muted-foreground">पेमेंट पद्धत</span>
-              <span className="text-foreground">Online (Razorpay) ✅</span>
+              <span className="text-foreground">
+                {isOnline ? "Online (Razorpay) ✅" : "रोख (डिलिव्हरी वेळी) 💵"}
+              </span>
             </div>
           </div>
         </div>
