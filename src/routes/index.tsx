@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 import { Reveal } from "@/components/Reveal";
 import { GoldSwash } from "@/components/GoldSwash";
 import { LegalLinks } from "@/components/LegalPage";
+import { Instagram, Facebook, Youtube, MessageCircle } from "lucide-react";
 import { getActiveProduct, getTestimonials, getSiteContent } from "@/lib/queries";
 import { track } from "@/lib/analytics";
+import { toEmbed } from "@/lib/embed";
 import templeBg from "@/assets/temple-bg.jpg";
 import stoneMacro from "@/assets/stone-macro.jpg";
 import stoneHand from "@/assets/stone-hand.jpg";
@@ -139,6 +141,7 @@ function Index() {
 
   // Split headline at the last comma so the tail renders in gold (matches original).
   const headline = content["hero_headline"] || "स्वामींचा आशीर्वाद, तुमच्या हातात";
+  const heroVideo = toEmbed(content["hero_video_url"] || "");
   const ci = headline.lastIndexOf(",");
   const headHead = ci > -1 ? headline.slice(0, ci + 1) : headline;
   const headTail = ci > -1 ? headline.slice(ci + 1).trim() : "";
@@ -197,26 +200,33 @@ function Index() {
               className="group relative mx-auto aspect-video w-full max-w-2xl overflow-hidden rounded-3xl border-2 border-accent/60"
               style={{ boxShadow: "var(--shadow-gold)" }}
             >
-              <img
-                src={stoneMacro}
-                alt="इच्छापूर्ती लकी स्टोन — मखमली पार्श्वभूमीवर"
-                width={1200}
-                height={1200}
-                className="h-full w-full object-cover"
-              />
-              <div className="absolute inset-0 bg-[color-mix(in_oklab,var(--maroon)_35%,transparent)]" />
-              <button
-                type="button"
-                aria-label="व्हिडिओ पहा"
-                className="absolute inset-0 flex items-center justify-center"
-              >
-                <span className="flex h-16 w-16 items-center justify-center rounded-full bg-ivory/90 text-2xl text-primary shadow-lg transition-transform duration-200 group-hover:scale-110 md:h-20 md:w-20">
-                  ▶
-                </span>
-              </button>
-              <span className="deva absolute bottom-3 left-4 rounded-full bg-navy/80 px-3 py-1 text-xs text-gold-light">
-                दुकानातील प्रत्यक्ष व्हिडिओ
-              </span>
+              {heroVideo ? (
+                heroVideo.type === "iframe" ? (
+                  <iframe
+                    src={heroVideo.src}
+                    title="Diamond House"
+                    allow="autoplay; fullscreen; picture-in-picture"
+                    allowFullScreen
+                    className="h-full w-full"
+                  />
+                ) : (
+                  <video src={heroVideo.src} controls className="h-full w-full object-cover" />
+                )
+              ) : (
+                <>
+                  <img
+                    src={content["hero_banner_image"] || stoneMacro}
+                    alt="इच्छापूर्ती लकी स्टोन — मखमली पार्श्वभूमीवर"
+                    width={1200}
+                    height={1200}
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-[color-mix(in_oklab,var(--maroon)_35%,transparent)]" />
+                  <span className="deva absolute bottom-3 left-4 rounded-full bg-navy/80 px-3 py-1 text-xs text-gold-light">
+                    दुकानातील प्रत्यक्ष झलक
+                  </span>
+                </>
+              )}
             </div>
           </Reveal>
 
@@ -533,6 +543,57 @@ function Index() {
         <p className="deva mt-10 text-center text-xs opacity-60">
           © {new Date().getFullYear()} Diamond House, कोल्हापूर. सर्व हक्क राखीव.
         </p>
+        {(content["social_instagram"] ||
+          content["social_facebook"] ||
+          content["social_youtube"] ||
+          content["social_whatsapp_channel"]) && (
+          <div className="mt-5 flex justify-center gap-3">
+            {content["social_instagram"] && (
+              <a
+                href={content["social_instagram"]}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Instagram"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-gold text-gold-light transition-colors hover:bg-gold hover:text-navy"
+              >
+                <Instagram className="h-4 w-4" />
+              </a>
+            )}
+            {content["social_facebook"] && (
+              <a
+                href={content["social_facebook"]}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Facebook"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-gold text-gold-light transition-colors hover:bg-gold hover:text-navy"
+              >
+                <Facebook className="h-4 w-4" />
+              </a>
+            )}
+            {content["social_youtube"] && (
+              <a
+                href={content["social_youtube"]}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="YouTube"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-gold text-gold-light transition-colors hover:bg-gold hover:text-navy"
+              >
+                <Youtube className="h-4 w-4" />
+              </a>
+            )}
+            {content["social_whatsapp_channel"] && (
+              <a
+                href={content["social_whatsapp_channel"]}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="WhatsApp"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-gold text-gold-light transition-colors hover:bg-gold hover:text-navy"
+              >
+                <MessageCircle className="h-4 w-4" />
+              </a>
+            )}
+          </div>
+        )}
         <div className="mt-5 flex justify-center">
           <LegalLinks className="justify-center" />
         </div>

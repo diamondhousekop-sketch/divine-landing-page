@@ -33,7 +33,10 @@ function AccountPage() {
     }
     setSavingEmail(true);
     try {
-      const { error } = await supabase.auth.updateUser({ email: email.trim() });
+      const { error } = await supabase.auth.updateUser(
+        { email: email.trim() },
+        { emailRedirectTo: `${window.location.origin}/admin/account` },
+      );
       if (error) throw error;
       setEmailMsg("तपासणी ईमेल पाठवली आहे — नवीन ईमेलमधील लिंकवर क्लिक करून पुष्टी करा. ✅");
       setEmail("");

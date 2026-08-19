@@ -30,16 +30,7 @@ export const Route = createFileRoute("/order-confirmation")({
   component: OrderConfirmation,
 });
 
-function toEmbed(url: string): { type: "iframe" | "video"; src: string } | null {
-  if (!url) return null;
-  const u = url.trim();
-  const yt = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{6,})/);
-  if (yt) return { type: "iframe", src: `https://www.youtube.com/embed/${yt[1]}` };
-  const vm = u.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-  if (vm) return { type: "iframe", src: `https://player.vimeo.com/video/${vm[1]}` };
-  if (/\.(mp4|webm|mov)(\?|$)/i.test(u)) return { type: "video", src: u };
-  return null;
-}
+import { toEmbed } from "@/lib/embed";
 
 const WA_PHONE = "919657130131";
 

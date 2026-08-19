@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2, Save, CreditCard } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { ImageUploader } from "@/components/admin/ImageUploader";
 import { adminFetch } from "@/lib/admin-api";
 import { LEGAL, LEGAL_ORDER } from "@/lib/legal";
 
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/admin/content")({
   component: ContentPage,
 });
 
-type FieldDef = { key: string; label: string; multiline?: boolean; big?: boolean };
+type FieldDef = { key: string; label: string; multiline?: boolean; big?: boolean; image?: boolean };
 
 const CONTENT_FIELDS: FieldDef[] = [
   { key: "hero_badge", label: "हिरो बॅज (वरील छोटा मजकूर)" },
@@ -18,9 +19,25 @@ const CONTENT_FIELDS: FieldDef[] = [
   { key: "hero_subheadline", label: "हिरो उप-शीर्षक (English)", multiline: true },
   { key: "announcement", label: "घोषणा पट्टी (announcement bar)", multiline: true },
   {
+    key: "hero_video_url",
+    label: "हिरो व्हिडिओ URL (Vimeo/YouTube) — मुख्य पानावर वरती दिसेल",
+  },
+  {
+    key: "hero_banner_image",
+    label: "हिरो बॅनर इमेज (व्हिडिओ नसल्यास दिसेल — 16:9)",
+    image: true,
+  },
+  {
     key: "founder_video_url",
     label: "Founder Thank-You व्हिडिओ URL (YouTube / Vimeo / MP4) — पेमेंट यशस्वी पानावर दिसेल",
   },
+];
+
+const SOCIAL_FIELDS: FieldDef[] = [
+  { key: "social_instagram", label: "Instagram लिंक" },
+  { key: "social_facebook", label: "Facebook लिंक" },
+  { key: "social_youtube", label: "YouTube लिंक" },
+  { key: "social_whatsapp_channel", label: "WhatsApp Channel लिंक" },
 ];
 
 const SEO_FIELDS: FieldDef[] = [
@@ -34,7 +51,7 @@ const LEGAL_FIELDS: FieldDef[] = LEGAL_ORDER.flatMap((k) => [
   { key: LEGAL[k].bodyKey, label: `${LEGAL[k].footerLabel} — मजकूर`, multiline: true, big: true },
 ]);
 
-const FIELDS: FieldDef[] = [...CONTENT_FIELDS, ...SEO_FIELDS, ...LEGAL_FIELDS];
+const FIELDS: FieldDef[] = [...CONTENT_FIELDS, ...SOCIAL_FIELDS, ...SEO_FIELDS, ...LEGAL_FIELDS];
 
 function ContentPage() {
   const [values, setValues] = useState<Record<string, string>>({});
@@ -143,7 +160,15 @@ function ContentPage() {
               {FIELDS.map((f) => (
                 <div key={f.key}>
                   <label className="deva text-sm text-foreground">{f.label}</label>
-                  {f.multiline ? (
+                  {f.image ? (
+                    <ImageUploader
+                      value={values[f.key] ?? ""}
+                      onChange={(url) => setValues({ ...values, [f.key]: url })}
+                      folder="site"
+                      aspect="aspect-video"
+                      testId={`content-${f.key}-upload`}
+                    />
+                  ) : f.multiline ? (
                     <textarea
                       rows={f.big ? 10 : 2}
                       className={inputCls}
