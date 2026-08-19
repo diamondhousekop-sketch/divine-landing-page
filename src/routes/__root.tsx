@@ -124,6 +124,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           href: "https://fonts.googleapis.com/css2?family=Marcellus&family=Playfair+Display:wght@500;700&family=Poppins:wght@300;400;500;600;700&family=Tiro+Devanagari+Marathi&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap",
         },
         { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+        { rel: "icon", href: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+        { rel: "icon", href: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+        { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
+        { rel: "icon", href: "/icon-192.png", type: "image/png", sizes: "192x192" },
       ],
     };
   },

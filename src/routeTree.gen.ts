@@ -37,6 +37,7 @@ import { Route as ApiAdminSettingsRouteImport } from './routes/api/admin/setting
 import { Route as ApiAdminStoreSettingsRouteImport } from './routes/api/admin/store-settings'
 import { Route as ApiAdminTestimonialsRouteImport } from './routes/api/admin/testimonials'
 import { Route as ApiAdminUploadRouteImport } from './routes/api/admin/upload'
+import { Route as ApiAdminUsersRouteImport } from './routes/api/admin/users'
 import { Route as ApiPaymentCreateRouteImport } from './routes/api/payment/create'
 import { Route as ApiPaymentVerifyRouteImport } from './routes/api/payment/verify'
 import { Route as ApiWebhookRazorpayRouteImport } from './routes/api/webhook/razorpay'
@@ -182,6 +183,11 @@ const ApiAdminUploadRoute = ApiAdminUploadRouteImport.update({
   path: '/api/admin/upload',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminUsersRoute = ApiAdminUsersRouteImport.update({
+  id: '/api/admin/users',
+  path: '/api/admin/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPaymentCreateRoute = ApiPaymentCreateRouteImport.update({
   id: '/api/payment/create',
   path: '/api/payment/create',
@@ -227,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/store-settings': typeof ApiAdminStoreSettingsRoute
   '/api/admin/testimonials': typeof ApiAdminTestimonialsRoute
   '/api/admin/upload': typeof ApiAdminUploadRoute
+  '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/payment/create': typeof ApiPaymentCreateRoute
   '/api/payment/verify': typeof ApiPaymentVerifyRoute
   '/api/webhook/razorpay': typeof ApiWebhookRazorpayRoute
@@ -260,6 +267,7 @@ export interface FileRoutesByTo {
   '/api/admin/store-settings': typeof ApiAdminStoreSettingsRoute
   '/api/admin/testimonials': typeof ApiAdminTestimonialsRoute
   '/api/admin/upload': typeof ApiAdminUploadRoute
+  '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/payment/create': typeof ApiPaymentCreateRoute
   '/api/payment/verify': typeof ApiPaymentVerifyRoute
   '/api/webhook/razorpay': typeof ApiWebhookRazorpayRoute
@@ -294,6 +302,7 @@ export interface FileRoutesById {
   '/api/admin/store-settings': typeof ApiAdminStoreSettingsRoute
   '/api/admin/testimonials': typeof ApiAdminTestimonialsRoute
   '/api/admin/upload': typeof ApiAdminUploadRoute
+  '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/payment/create': typeof ApiPaymentCreateRoute
   '/api/payment/verify': typeof ApiPaymentVerifyRoute
   '/api/webhook/razorpay': typeof ApiWebhookRazorpayRoute
@@ -329,6 +338,7 @@ export interface FileRouteTypes {
     | '/api/admin/store-settings'
     | '/api/admin/testimonials'
     | '/api/admin/upload'
+    | '/api/admin/users'
     | '/api/payment/create'
     | '/api/payment/verify'
     | '/api/webhook/razorpay'
@@ -362,6 +372,7 @@ export interface FileRouteTypes {
     | '/api/admin/store-settings'
     | '/api/admin/testimonials'
     | '/api/admin/upload'
+    | '/api/admin/users'
     | '/api/payment/create'
     | '/api/payment/verify'
     | '/api/webhook/razorpay'
@@ -395,6 +406,7 @@ export interface FileRouteTypes {
     | '/api/admin/store-settings'
     | '/api/admin/testimonials'
     | '/api/admin/upload'
+    | '/api/admin/users'
     | '/api/payment/create'
     | '/api/payment/verify'
     | '/api/webhook/razorpay'
@@ -429,6 +441,7 @@ export interface RootRouteChildren {
   ApiAdminStoreSettingsRoute: typeof ApiAdminStoreSettingsRoute
   ApiAdminTestimonialsRoute: typeof ApiAdminTestimonialsRoute
   ApiAdminUploadRoute: typeof ApiAdminUploadRoute
+  ApiAdminUsersRoute: typeof ApiAdminUsersRoute
   ApiPaymentCreateRoute: typeof ApiPaymentCreateRoute
   ApiPaymentVerifyRoute: typeof ApiPaymentVerifyRoute
   ApiWebhookRazorpayRoute: typeof ApiWebhookRazorpayRoute
@@ -632,6 +645,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminUploadRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/users': {
+      id: '/api/admin/users'
+      path: '/api/admin/users'
+      fullPath: '/api/admin/users'
+      preLoaderRoute: typeof ApiAdminUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/payment/create': {
       id: '/api/payment/create'
       path: '/api/payment/create'
@@ -685,6 +705,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminStoreSettingsRoute: ApiAdminStoreSettingsRoute,
   ApiAdminTestimonialsRoute: ApiAdminTestimonialsRoute,
   ApiAdminUploadRoute: ApiAdminUploadRoute,
+  ApiAdminUsersRoute: ApiAdminUsersRoute,
   ApiPaymentCreateRoute: ApiPaymentCreateRoute,
   ApiPaymentVerifyRoute: ApiPaymentVerifyRoute,
   ApiWebhookRazorpayRoute: ApiWebhookRazorpayRoute,

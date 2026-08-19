@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { Loader2, KeyRound, Mail } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Loader2, KeyRound, Mail, UserPlus, Trash2, Users } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { supabase } from "@/lib/supabase";
 import { useRequireAdmin } from "@/hooks/use-admin";
+import { adminFetch } from "@/lib/admin-api";
 
 export const Route = createFileRoute("/admin/account")({
   head: () => ({ meta: [{ title: "Account | Diamond House Admin" }] }),
@@ -24,6 +25,104 @@ function AccountPage() {
 
   const inputCls =
     "mt-1 w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring/40";
+
+  // ── Manage other admins ──
+  type AdminUser = { id: string; email: string; created_at: string };
+  const [admins, setAdmins] = useState<AdminUser[]>([]);
+  const [selfId, setSelfId] = useState<string | null>(null);
+  const [loadingAdmins, setLoadingAdmins] = useState(true);
+  const [adminsErr, setAdminsErr] = useState<string | null>(null);
+
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [addingAdmin, setAddingAdmin] = useState(false);
+  const [addMsg, setAddMsg] = useState<string | null>(null);
+
+  const [resetId, setResetId] = useState<string | null>(null);
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetBusy, setResetBusy] = useState(false);
+  const [resetMsg, setResetMsg] = useState<string | null>(null);
+
+  const loadAdmins = async () => {
+    setLoadingAdmins(true);
+    setAdminsErr(null);
+    try {
+      const d = await adminFetch<{ users: AdminUser[]; self_id: string }>("/api/admin/users");
+      setAdmins(d.users);
+      setSelfId(d.self_id);
+    } catch (e) {
+      setAdminsErr(e instanceof Error ? e.message : "यादी मिळाली नाही.");
+    } finally {
+      setLoadingAdmins(false);
+    }
+  };
+
+  useEffect(() => {
+    loadAdmins();
+  }, []);
+
+  const addAdmin = async () => {
+    setAddMsg(null);
+    if (!newEmail.trim() || !/^\S+@\S+\.\S+$/.test(newEmail.trim())) {
+      setAddMsg("योग्य ईमेल टाका.");
+      return;
+    }
+    if (newPassword.length < 8) {
+      setAddMsg("पासवर्ड किमान 8 अक्षरांचा असावा.");
+      return;
+    }
+    setAddingAdmin(true);
+    try {
+      await adminFetch("/api/admin/users", {
+        method: "POST",
+        body: { email: newEmail.trim(), password: newPassword },
+      });
+      setAddMsg("नवीन अ‍ॅडमिन तयार झाला — तो/ती लगेच लॉगिन करू शकतात. ✅");
+      setNewEmail("");
+      setNewPassword("");
+      loadAdmins();
+    } catch (e) {
+      setAddMsg(e instanceof Error ? e.message : "तयार करता आले नाही.");
+    } finally {
+      setAddingAdmin(false);
+    }
+  };
+
+  const resetAdminPassword = async () => {
+    if (!resetId) return;
+    setResetMsg(null);
+    if (resetPassword.length < 8) {
+      setResetMsg("पासवर्ड किमान 8 अक्षरांचा असावा.");
+      return;
+    }
+    setResetBusy(true);
+    try {
+      await adminFetch("/api/admin/users", {
+        method: "PATCH",
+        body: { id: resetId, password: resetPassword },
+      });
+      setResetMsg("पासवर्ड बदलला! ✅");
+      setResetPassword("");
+      setTimeout(() => {
+        setResetId(null);
+        setResetMsg(null);
+      }, 1200);
+    } catch (e) {
+      setResetMsg(e instanceof Error ? e.message : "अपडेट करता आले नाही.");
+    } finally {
+      setResetBusy(false);
+    }
+  };
+
+  const deleteAdmin = async (a: AdminUser) => {
+    if (!confirm(`${a.email} ला अ‍ॅडमिन यादीतून काढायचे?`)) return;
+    try {
+      await adminFetch(`/api/admin/users?id=${a.id}`, { method: "DELETE" });
+      setAdmins((prev) => prev.filter((x) => x.id !== a.id));
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Delete failed");
+    }
+  };
 
   const changeEmail = async () => {
     setEmailMsg(null);
@@ -170,6 +269,143 @@ function AccountPage() {
             )}
             पासवर्ड अपडेट करा
           </button>
+        </div>
+      </div>
+
+      {/* ── Manage admins ── */}
+      <div className="surface-card mt-6 p-6" data-testid="manage-admins">
+        <h2 className="deva flex items-center gap-2 text-lg text-foreground">
+          <Users className="h-5 w-5 text-accent" /> अ‍ॅडमिन व्यवस्थापन
+        </h2>
+        <p className="deva mt-1 text-xs text-muted-foreground">
+          नवीन अ‍ॅडमिन इथून लगेच तयार होतो (ईमेल कन्फर्मेशनची वाट पाहावी लागत नाही), आणि कोणत्याही
+          अ‍ॅडमिनचा पासवर्ड इथून रीसेट करता येतो.
+        </p>
+
+        {/* Add new admin */}
+        <div className="mt-5 grid gap-3 rounded-xl border border-border bg-card/50 p-4 sm:grid-cols-3">
+          <input
+            type="email"
+            className={inputCls}
+            placeholder="नवीन अ‍ॅडमिन ईमेल"
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
+            data-testid="new-admin-email"
+          />
+          <input
+            type="password"
+            className={inputCls}
+            placeholder="पासवर्ड (किमान 8 अक्षरे)"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            data-testid="new-admin-password"
+            autoComplete="new-password"
+          />
+          <button
+            onClick={addAdmin}
+            disabled={addingAdmin}
+            className="deva inline-flex items-center justify-center gap-2 rounded-full bg-navy px-5 py-2.5 text-sm font-semibold text-gold-light disabled:opacity-70"
+            data-testid="add-admin"
+          >
+            {addingAdmin ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <UserPlus className="h-4 w-4" />
+            )}
+            अ‍ॅडमिन तयार करा
+          </button>
+        </div>
+        {addMsg && (
+          <p className="deva mt-2 text-sm text-[var(--whatsapp)]" data-testid="add-admin-msg">
+            {addMsg}
+          </p>
+        )}
+
+        {/* Existing admins list */}
+        <div className="mt-6 space-y-2">
+          {loadingAdmins ? (
+            <p className="deva flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> यादी लोड होत आहे...
+            </p>
+          ) : adminsErr ? (
+            <p className="text-sm text-destructive">{adminsErr}</p>
+          ) : (
+            admins.map((a) => (
+              <div
+                key={a.id}
+                className="flex flex-col gap-2 rounded-xl border border-border p-3 sm:flex-row sm:items-center sm:justify-between"
+                data-testid={`admin-row-${a.email}`}
+              >
+                <div>
+                  <p className="text-sm text-foreground">
+                    {a.email}
+                    {a.id === selfId && (
+                      <span className="deva ml-2 rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
+                        तुम्ही
+                      </span>
+                    )}
+                  </p>
+                </div>
+                {resetId === a.id ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <input
+                      type="password"
+                      className="w-40 rounded-lg border border-border bg-card px-3 py-1.5 text-xs outline-none"
+                      placeholder="नवीन पासवर्ड"
+                      value={resetPassword}
+                      onChange={(e) => setResetPassword(e.target.value)}
+                      autoComplete="new-password"
+                      data-testid={`reset-password-input-${a.email}`}
+                    />
+                    <button
+                      onClick={resetAdminPassword}
+                      disabled={resetBusy}
+                      className="deva rounded-full bg-navy px-4 py-1.5 text-xs font-semibold text-gold-light disabled:opacity-70"
+                    >
+                      {resetBusy ? "..." : "जतन करा"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setResetId(null);
+                        setResetPassword("");
+                        setResetMsg(null);
+                      }}
+                      className="deva text-xs text-muted-foreground hover:underline"
+                    >
+                      रद्द करा
+                    </button>
+                    {resetMsg && (
+                      <span className="deva text-xs text-[var(--whatsapp)]">{resetMsg}</span>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setResetId(a.id);
+                        setResetPassword("");
+                        setResetMsg(null);
+                      }}
+                      className="deva inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs hover:bg-secondary"
+                      data-testid={`reset-password-${a.email}`}
+                    >
+                      <KeyRound className="h-3.5 w-3.5" /> पासवर्ड रीसेट
+                    </button>
+                    {a.id !== selfId && (
+                      <button
+                        onClick={() => deleteAdmin(a)}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-destructive/50 text-destructive hover:bg-destructive/10"
+                        title="अ‍ॅडमिन काढा"
+                        data-testid={`delete-admin-${a.email}`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
         </div>
       </div>
     </AdminLayout>

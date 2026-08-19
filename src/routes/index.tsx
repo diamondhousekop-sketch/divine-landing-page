@@ -93,6 +93,80 @@ const faqs = [
 // photos from Admin → Products. Keeps the section from ever looking empty.
 const FALLBACK_GALLERY = [stoneBox, stoneMacro, stoneHand, family];
 
+/**
+ * Hero media block: shows the banner image first, then — if a video URL is
+ * set — automatically switches to an autoplaying (muted) video after a
+ * short delay. Clicking the banner during that delay skips straight to the
+ * video. If no video is set, the banner is shown permanently (today's
+ * behavior, unchanged).
+ */
+function HeroMedia({ bannerSrc, videoUrl }: { bannerSrc: string; videoUrl: string }) {
+  const video = toEmbed(videoUrl, { autoplay: true });
+  const [showVideo, setShowVideo] = useState(false);
+
+  useEffect(() => {
+    if (!video) return;
+    setShowVideo(false);
+    const t = setTimeout(() => setShowVideo(true), 3000);
+    return () => clearTimeout(t);
+  }, [videoUrl]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div
+      className="group relative mx-auto aspect-video w-full max-w-2xl overflow-hidden rounded-3xl border-2 border-accent/60"
+      style={{ boxShadow: "var(--shadow-gold)" }}
+    >
+      {video && showVideo ? (
+        video.type === "iframe" ? (
+          <iframe
+            src={video.src}
+            title="Diamond House"
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowFullScreen
+            className="h-full w-full"
+          />
+        ) : (
+          <video
+            src={video.src}
+            autoPlay
+            muted
+            loop
+            playsInline
+            controls
+            className="h-full w-full object-cover"
+          />
+        )
+      ) : (
+        <button
+          type="button"
+          onClick={() => video && setShowVideo(true)}
+          aria-label={video ? "व्हिडिओ आत्ता पहा" : undefined}
+          className="relative block h-full w-full"
+        >
+          <img
+            src={bannerSrc}
+            alt="इच्छापूर्ती लकी स्टोन — मखमली पार्श्वभूमीवर"
+            width={1200}
+            height={1200}
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-[color-mix(in_oklab,var(--maroon)_35%,transparent)]" />
+          {video && (
+            <span className="absolute inset-0 flex items-center justify-center">
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-ivory/90 text-2xl text-primary shadow-lg transition-transform duration-200 group-hover:scale-110 md:h-20 md:w-20">
+                ▶
+              </span>
+            </span>
+          )}
+          <span className="deva absolute bottom-3 left-4 rounded-full bg-navy/80 px-3 py-1 text-xs text-gold-light">
+            दुकानातील प्रत्यक्ष झलक
+          </span>
+        </button>
+      )}
+    </div>
+  );
+}
+
 function ProductGallery({ images, videoUrl }: { images: string[]; videoUrl: string }) {
   const video = toEmbed(videoUrl);
   const slides: { kind: "image" | "video"; src: string }[] = [
@@ -211,7 +285,6 @@ function Index() {
 
   // Split headline at the last comma so the tail renders in gold (matches original).
   const headline = content["hero_headline"] || "स्वामींचा आशीर्वाद, तुमच्या हातात";
-  const heroVideo = toEmbed(content["hero_video_url"] || "");
   const ci = headline.lastIndexOf(",");
   const headHead = ci > -1 ? headline.slice(0, ci + 1) : headline;
   const headTail = ci > -1 ? headline.slice(ci + 1).trim() : "";
@@ -266,38 +339,10 @@ function Index() {
           </Reveal>
 
           <Reveal delay={120} className="mt-9">
-            <div
-              className="group relative mx-auto aspect-video w-full max-w-2xl overflow-hidden rounded-3xl border-2 border-accent/60"
-              style={{ boxShadow: "var(--shadow-gold)" }}
-            >
-              {heroVideo ? (
-                heroVideo.type === "iframe" ? (
-                  <iframe
-                    src={heroVideo.src}
-                    title="Diamond House"
-                    allow="autoplay; fullscreen; picture-in-picture"
-                    allowFullScreen
-                    className="h-full w-full"
-                  />
-                ) : (
-                  <video src={heroVideo.src} controls className="h-full w-full object-cover" />
-                )
-              ) : (
-                <>
-                  <img
-                    src={content["hero_banner_image"] || stoneMacro}
-                    alt="इच्छापूर्ती लकी स्टोन — मखमली पार्श्वभूमीवर"
-                    width={1200}
-                    height={1200}
-                    className="h-full w-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-[color-mix(in_oklab,var(--maroon)_35%,transparent)]" />
-                  <span className="deva absolute bottom-3 left-4 rounded-full bg-navy/80 px-3 py-1 text-xs text-gold-light">
-                    दुकानातील प्रत्यक्ष झलक
-                  </span>
-                </>
-              )}
-            </div>
+            <HeroMedia
+              bannerSrc={content["hero_banner_image"] || stoneMacro}
+              videoUrl={content["hero_video_url"] || ""}
+            />
           </Reveal>
 
           <Reveal delay={200} className="mt-9">
