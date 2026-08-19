@@ -11,6 +11,7 @@ export type Product = {
   price: number;
   compare_at_price: number | null;
   images: string[];
+  video_url: string | null;
   stock_quantity: number;
   is_active: boolean;
   created_at: string;
@@ -22,6 +23,7 @@ export type Testimonial = {
   customer_city: string | null;
   quote: string;
   vimeo_url: string | null;
+  customer_photo_url: string | null;
   rating: number;
   display_order: number;
   is_active: boolean;
@@ -57,31 +59,37 @@ export const FALLBACK_PRODUCT = {
   name: "इच्छापूर्ती लकी स्टोन",
   price: 1100,
   compare_at_price: 2100,
+  images: [] as string[],
+  video_url: null as string | null,
 } as const;
 
 export const FALLBACK_TESTIMONIALS: Pick<
   Testimonial,
-  "customer_name" | "customer_city" | "quote"
+  "customer_name" | "customer_city" | "quote" | "customer_photo_url"
 >[] = [
   {
     customer_name: "राजू पाटील",
     customer_city: "कोल्हापूर",
     quote: "दुकानातील अनुभव खूप छान. मनाला शांती मिळाली.",
+    customer_photo_url: null,
   },
   {
     customer_name: "सुनिता देशमुख",
     customer_city: "इचलकरंजी",
     quote: "घरातलं वातावरण आता खूप सकारात्मक वाटतं.",
+    customer_photo_url: null,
   },
   {
     customer_name: "अमोल कदम",
     customer_city: "सांगली",
     quote: "व्यवसायात नवा उत्साह जाणवतोय. धन्यवाद स्वामी.",
+    customer_photo_url: null,
   },
   {
     customer_name: "प्रिया जाधव",
     customer_city: "सातारा",
     quote: "पॅकिंग आणि डिलिव्हरी अगदी सुरक्षित होती.",
+    customer_photo_url: null,
   },
 ];
 

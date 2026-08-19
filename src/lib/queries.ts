@@ -12,17 +12,21 @@ import {
 // gracefully to fallbacks so the landing page always renders.
 
 export async function getActiveProduct(): Promise<
-  Pick<Product, "id" | "name" | "price" | "compare_at_price">
+  Pick<Product, "id" | "name" | "price" | "compare_at_price" | "images" | "video_url">
 > {
   try {
     const { data } = await supabase
       .from("products")
-      .select("id,name,price,compare_at_price")
+      .select("id,name,price,compare_at_price,images,video_url")
       .eq("is_active", true)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
-    if (data) return data as Pick<Product, "id" | "name" | "price" | "compare_at_price">;
+    if (data)
+      return data as Pick<
+        Product,
+        "id" | "name" | "price" | "compare_at_price" | "images" | "video_url"
+      >;
   } catch {
     /* ignore */
   }
@@ -30,16 +34,19 @@ export async function getActiveProduct(): Promise<
 }
 
 export async function getTestimonials(): Promise<
-  Pick<Testimonial, "customer_name" | "customer_city" | "quote">[]
+  Pick<Testimonial, "customer_name" | "customer_city" | "quote" | "customer_photo_url">[]
 > {
   try {
     const { data } = await supabase
       .from("testimonials")
-      .select("customer_name,customer_city,quote")
+      .select("customer_name,customer_city,quote,customer_photo_url")
       .eq("is_active", true)
       .order("display_order", { ascending: true });
     if (data && data.length)
-      return data as Pick<Testimonial, "customer_name" | "customer_city" | "quote">[];
+      return data as Pick<
+        Testimonial,
+        "customer_name" | "customer_city" | "quote" | "customer_photo_url"
+      >[];
   } catch {
     /* ignore */
   }

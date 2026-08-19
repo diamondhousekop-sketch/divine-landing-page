@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { ImageUploader } from "@/components/admin/ImageUploader";
 import { adminFetch } from "@/lib/admin-api";
 import type { Product } from "@/lib/types";
 
@@ -18,6 +19,8 @@ type Draft = {
   compare_at_price: number | null;
   stock_quantity: number;
   is_active: boolean;
+  images: string[];
+  video_url: string;
 };
 
 const empty: Draft = {
@@ -27,6 +30,8 @@ const empty: Draft = {
   compare_at_price: null,
   stock_quantity: 0,
   is_active: true,
+  images: [],
+  video_url: "",
 };
 
 function ProductsPage() {
@@ -62,7 +67,8 @@ function ProductsPage() {
         compare_at_price: draft.compare_at_price === null ? null : Number(draft.compare_at_price),
         stock_quantity: Number(draft.stock_quantity),
         is_active: draft.is_active,
-        images: [],
+        images: draft.images,
+        video_url: draft.video_url || "",
       };
       if (draft.id) {
         await adminFetch("/api/admin/products", {
@@ -145,6 +151,8 @@ function ProductsPage() {
                       p.compare_at_price === null ? null : Number(p.compare_at_price),
                     stock_quantity: p.stock_quantity,
                     is_active: p.is_active,
+                    images: p.images ?? [],
+                    video_url: p.video_url ?? "",
                   })
                 }
                 className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs hover:bg-secondary"
@@ -241,6 +249,54 @@ function ProductsPage() {
                   />
                   <span className="deva">वेबसाईटवर दाखवा</span>
                 </label>
+              </div>
+
+              <div>
+                <label className="deva text-sm">
+                  प्रॉडक्ट फोटो (स्लायडरसाठी — एकापेक्षा जास्त)
+                </label>
+                <div className="mt-2 flex flex-wrap gap-3">
+                  {draft.images.map((url, i) => (
+                    <div key={i} className="relative">
+                      <img
+                        src={url}
+                        alt=""
+                        className="h-20 w-20 rounded-xl border border-border object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setDraft({ ...draft, images: draft.images.filter((_, j) => j !== i) })
+                        }
+                        className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-white"
+                        aria-label="काढा"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <ImageUploader
+                    value=""
+                    onChange={(url) =>
+                      url && setDraft({ ...draft, images: [...draft.images, url] })
+                    }
+                    folder="products"
+                    testId="product-image-add"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="deva text-sm">
+                  प्रॉडक्ट व्हिडिओ URL (Vimeo — स्लायडरच्या शेवटी दिसेल)
+                </label>
+                <input
+                  className={inputCls}
+                  value={draft.video_url}
+                  onChange={(e) => setDraft({ ...draft, video_url: e.target.value })}
+                  placeholder="https://vimeo.com/123456789"
+                  data-testid="product-video-url"
+                />
               </div>
             </div>
             <div className="mt-6 flex justify-end gap-3">

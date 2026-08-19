@@ -8,6 +8,7 @@ const CreateInput = z.object({
   customer_city: z.string().trim().max(120).optional().or(z.literal("")),
   quote: z.string().trim().min(2).max(1000),
   vimeo_url: z.string().trim().url().max(500).optional().or(z.literal("")),
+  customer_photo_url: z.string().trim().max(1000).optional().or(z.literal("")),
   rating: z.number().int().min(1).max(5).default(5),
   display_order: z.number().int().default(0),
   is_active: z.boolean().default(true),
@@ -40,7 +41,11 @@ export const Route = createFileRoute("/api/admin/testimonials")({
         }
         const parsed = CreateInput.safeParse(body);
         if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
-        const payload = { ...parsed.data, vimeo_url: parsed.data.vimeo_url || null };
+        const payload = {
+          ...parsed.data,
+          vimeo_url: parsed.data.vimeo_url || null,
+          customer_photo_url: parsed.data.customer_photo_url || null,
+        };
         const admin = getAdminClient();
         const { data, error } = await admin
           .from("testimonials")

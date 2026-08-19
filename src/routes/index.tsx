@@ -89,6 +89,76 @@ const faqs = [
   },
 ];
 
+// Static fallback gallery — used only until the admin uploads real product
+// photos from Admin → Products. Keeps the section from ever looking empty.
+const FALLBACK_GALLERY = [stoneBox, stoneMacro, stoneHand, family];
+
+function ProductGallery({ images, videoUrl }: { images: string[]; videoUrl: string }) {
+  const video = toEmbed(videoUrl);
+  const slides: { kind: "image" | "video"; src: string }[] = [
+    ...images.map((src) => ({ kind: "image" as const, src })),
+    ...(video ? [{ kind: "video" as const, src: videoUrl }] : []),
+  ];
+  const [active, setActive] = useState(0);
+  const current = slides[Math.min(active, slides.length - 1)];
+  const currentEmbed = current?.kind === "video" ? toEmbed(current.src) : null;
+
+  return (
+    <div>
+      <div
+        className="overflow-hidden rounded-3xl border border-accent/50"
+        style={{ boxShadow: "var(--shadow-gold)" }}
+      >
+        {current?.kind === "video" && currentEmbed ? (
+          currentEmbed.type === "iframe" ? (
+            <iframe
+              src={currentEmbed.src}
+              title="Product video"
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+              className="aspect-square w-full"
+            />
+          ) : (
+            <video src={currentEmbed.src} controls className="aspect-square w-full object-cover" />
+          )
+        ) : (
+          <img
+            src={current?.src}
+            alt="इच्छापूर्ती लकी स्टोन"
+            loading="lazy"
+            width={1008}
+            height={1008}
+            className="aspect-square w-full object-cover"
+          />
+        )}
+      </div>
+      {slides.length > 1 && (
+        <div className="mt-4 grid grid-cols-4 gap-3">
+          {slides.map((s, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setActive(i)}
+              aria-label={s.kind === "video" ? "व्हिडिओ पहा" : `फोटो ${i + 1}`}
+              className={`relative aspect-square w-full overflow-hidden rounded-xl border object-cover transition-colors ${
+                i === active ? "border-accent" : "border-border"
+              }`}
+            >
+              {s.kind === "video" ? (
+                <div className="flex h-full w-full items-center justify-center bg-navy text-gold-light">
+                  ▶
+                </div>
+              ) : (
+                <img src={s.src} alt="" className="h-full w-full object-cover" />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CtaButton({
   children,
   className = "",
@@ -357,18 +427,20 @@ function Index() {
               >
                 <div className="relative aspect-[4/3] border-b border-accent/40">
                   <img
-                    src={family}
+                    src={t.customer_photo_url || family}
                     alt={`${t.customer_name} यांचा अनुभव`}
                     loading="lazy"
                     width={1200}
                     height={800}
                     className="h-full w-full object-cover"
                   />
-                  <div className="absolute inset-0 flex items-center justify-center bg-[color-mix(in_oklab,var(--maroon)_25%,transparent)]">
-                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-ivory/90 text-primary">
-                      ▶
-                    </span>
-                  </div>
+                  {!t.customer_photo_url && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-[color-mix(in_oklab,var(--maroon)_25%,transparent)]">
+                      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-ivory/90 text-primary">
+                        ▶
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="p-5">
                   <div className="text-sm tracking-widest text-accent">★★★★★</div>
@@ -388,32 +460,12 @@ function Index() {
       <section id="order" className="px-5 py-16 md:py-24">
         <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-2">
           <Reveal>
-            <div
-              className="overflow-hidden rounded-3xl border border-accent/50"
-              style={{ boxShadow: "var(--shadow-gold)" }}
-            >
-              <img
-                src={stoneBox}
-                alt="इच्छापूर्ती लकी स्टोन प्रमाणपत्रासह भेट पेटीत"
-                loading="lazy"
-                width={1008}
-                height={1008}
-                className="h-full w-full object-cover"
-              />
-            </div>
-            <div className="mt-4 grid grid-cols-3 gap-3">
-              {[stoneMacro, stoneHand, family].map((src, i) => (
-                <img
-                  key={i}
-                  src={src}
-                  alt="इच्छापूर्ती लकी स्टोन — अन्य दृश्य"
-                  loading="lazy"
-                  width={600}
-                  height={600}
-                  className="aspect-square w-full rounded-xl border border-border object-cover"
-                />
-              ))}
-            </div>
+            <ProductGallery
+              images={
+                product.images && product.images.length > 0 ? product.images : FALLBACK_GALLERY
+              }
+              videoUrl={product.video_url || ""}
+            />
           </Reveal>
 
           <Reveal delay={120}>
@@ -459,12 +511,6 @@ function Index() {
 
             <div className="mt-8 flex flex-wrap gap-3">
               <CtaButton className="px-10 text-lg">आत्ताच मागवा</CtaButton>
-              <a
-                href={PHONE_TEL}
-                className="deva inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-[var(--whatsapp)] px-6 text-sm font-medium text-[var(--whatsapp)] transition-colors hover:bg-[color-mix(in_oklab,var(--whatsapp)_12%,transparent)]"
-              >
-                📞 {PHONE}
-              </a>
             </div>
             <p className="deva mt-3 text-xs text-muted-foreground">
               Cash on Delivery व UPI उपलब्ध · संपूर्ण महाराष्ट्रात डिलिव्हरी

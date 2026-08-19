@@ -9,6 +9,7 @@ const CreateInput = z.object({
   price: z.number().min(0),
   compare_at_price: z.number().min(0).nullable().optional(),
   images: z.array(z.string()).default([]),
+  video_url: z.string().trim().max(500).optional().or(z.literal("")),
   stock_quantity: z.number().int().min(0).default(0),
   is_active: z.boolean().default(true),
 });

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, Loader2, Star } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { ImageUploader } from "@/components/admin/ImageUploader";
 import { adminFetch } from "@/lib/admin-api";
 import type { Testimonial } from "@/lib/types";
 
@@ -16,6 +17,7 @@ type Draft = {
   customer_city: string;
   quote: string;
   vimeo_url: string;
+  customer_photo_url: string;
   rating: number;
   display_order: number;
   is_active: boolean;
@@ -26,6 +28,7 @@ const empty: Draft = {
   customer_city: "",
   quote: "",
   vimeo_url: "",
+  customer_photo_url: "",
   rating: 5,
   display_order: 0,
   is_active: true,
@@ -62,6 +65,7 @@ function TestimonialsPage() {
         customer_city: draft.customer_city || "",
         quote: draft.quote,
         vimeo_url: draft.vimeo_url || "",
+        customer_photo_url: draft.customer_photo_url || "",
         rating: Number(draft.rating),
         display_order: Number(draft.display_order),
         is_active: draft.is_active,
@@ -144,6 +148,7 @@ function TestimonialsPage() {
                     customer_city: t.customer_city ?? "",
                     quote: t.quote,
                     vimeo_url: t.vimeo_url ?? "",
+                    customer_photo_url: t.customer_photo_url ?? "",
                     rating: t.rating,
                     display_order: t.display_order,
                     is_active: t.is_active,
@@ -205,6 +210,15 @@ function TestimonialsPage() {
                   value={draft.quote}
                   onChange={(e) => setDraft({ ...draft, quote: e.target.value })}
                   data-testid="testimonial-quote"
+                />
+              </div>
+              <div>
+                <label className="deva text-sm">ग्राहकाचा फोटो</label>
+                <ImageUploader
+                  value={draft.customer_photo_url}
+                  onChange={(url) => setDraft({ ...draft, customer_photo_url: url })}
+                  folder="testimonials"
+                  testId="testimonial-photo-upload"
                 />
               </div>
               <div>
