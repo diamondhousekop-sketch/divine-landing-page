@@ -46,6 +46,8 @@ export type Order = {
   order_status: OrderStatus;
   razorpay_order_id: string | null;
   razorpay_payment_id: string | null;
+  color_group: string | null;
+  color_letter: string | null;
   created_at: string;
   updated_at: string;
 };

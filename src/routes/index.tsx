@@ -7,6 +7,7 @@ import { Instagram, Facebook, Youtube, MessageCircle } from "lucide-react";
 import { getActiveProduct, getTestimonials, getSiteContent } from "@/lib/queries";
 import { track } from "@/lib/analytics";
 import { toEmbed } from "@/lib/embed";
+import { ColorLetterPicker } from "@/components/ColorLetterPicker";
 import templeBg from "@/assets/temple-bg.jpg";
 import stoneMacro from "@/assets/stone-macro.jpg";
 import stoneHand from "@/assets/stone-hand.jpg";
@@ -237,14 +238,17 @@ function CtaButton({
   children,
   className = "",
   to = "/checkout",
+  letter,
 }: {
   children: React.ReactNode;
   className?: string;
   to?: string;
+  letter?: string;
 }) {
   return (
     <Link
       to={to}
+      search={letter ? { letter } : {}}
       data-testid="cta-order-button"
       className={`shimmer cta-gold-pulse relative inline-flex min-h-[52px] items-center justify-center overflow-hidden rounded-full bg-navy px-8 text-base font-semibold tracking-wide text-gold-light transition-transform duration-200 hover:scale-[1.03] ${className}`}
     >
@@ -268,6 +272,7 @@ function SectionTitle({ children, sub }: { children: React.ReactNode; sub?: stri
 function Index() {
   const { product, testimonials, content } = Route.useLoaderData();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [colorLetter, setColorLetter] = useState("");
 
   // Fire ViewContent / view_item once when the landing page (hero product) loads.
   useEffect(() => {
@@ -346,7 +351,9 @@ function Index() {
           </Reveal>
 
           <Reveal delay={200} className="mt-9">
-            <CtaButton className="px-10 text-lg">आत्ताच मागवा</CtaButton>
+            <CtaButton className="px-10 text-lg" letter={colorLetter}>
+              आत्ताच मागवा
+            </CtaButton>
             <p className="deva mt-3 text-xs text-muted-foreground">
               मर्यादित स्टॉक — फक्त कोल्हापूर विभागासाठी
             </p>
@@ -511,6 +518,9 @@ function Index() {
               }
               videoUrl={product.video_url || ""}
             />
+            <div className="surface-card mt-5 p-5">
+              <ColorLetterPicker letter={colorLetter} onChange={setColorLetter} />
+            </div>
           </Reveal>
 
           <Reveal delay={120}>
@@ -555,7 +565,9 @@ function Index() {
             </ul>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <CtaButton className="px-10 text-lg">आत्ताच मागवा</CtaButton>
+              <CtaButton className="px-10 text-lg" letter={colorLetter}>
+                आत्ताच मागवा
+              </CtaButton>
             </div>
             <p className="deva mt-3 text-xs text-muted-foreground">
               Cash on Delivery व UPI उपलब्ध · संपूर्ण महाराष्ट्रात डिलिव्हरी
@@ -703,7 +715,9 @@ function Index() {
               </p>
             )}
           </div>
-          <CtaButton className="flex-1 px-6">आत्ताच मागवा</CtaButton>
+          <CtaButton className="flex-1 px-6" letter={colorLetter}>
+            आत्ताच मागवा
+          </CtaButton>
         </div>
       </div>
     </main>

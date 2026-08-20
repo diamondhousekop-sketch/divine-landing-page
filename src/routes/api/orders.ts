@@ -20,6 +20,8 @@ const OrderInput = z.object({
   quantity: z.number().int().min(1).max(10).default(1),
   payment_method: z.enum(["online", "cod"]),
   product_id: z.string().uuid().optional(),
+  color_letter: z.string().trim().max(10).optional().or(z.literal("")),
+  color_group: z.enum(["red", "white", "green", "yellow", "grey"]).optional(),
 });
 
 export const Route = createFileRoute("/api/orders")({
@@ -92,6 +94,8 @@ export const Route = createFileRoute("/api/orders")({
             payment_method: input.payment_method,
             payment_status: "pending" as const,
             order_status: "placed" as const,
+            color_letter: input.color_letter || null,
+            color_group: input.color_group || null,
           };
 
           const { data: order, error: insErr } = await admin

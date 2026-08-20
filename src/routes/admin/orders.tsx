@@ -5,6 +5,7 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { adminFetch, adminDownload } from "@/lib/admin-api";
 import type { Order, OrderStatus, PaymentStatus } from "@/lib/types";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { groupById } from "@/lib/rashi";
 
 export const Route = createFileRoute("/admin/orders")({
   head: () => ({ meta: [{ title: "Orders | Diamond House Admin" }] }),
@@ -76,6 +77,32 @@ function Badge({ value }: { value: string }) {
       className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColor[value] ?? "bg-secondary"}`}
     >
       {value}
+    </span>
+  );
+}
+
+function ColorBadge({
+  colorGroup,
+  colorLetter,
+}: {
+  colorGroup: string | null;
+  colorLetter: string | null;
+}) {
+  if (!colorGroup) {
+    return <span className="deva text-xs text-muted-foreground">—</span>;
+  }
+  const g = groupById(colorGroup);
+  if (!g) return <span className="deva text-xs text-muted-foreground">—</span>;
+  return (
+    <span
+      className="deva inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-0.5 text-xs font-medium"
+      title={colorLetter ? `अक्षर: ${colorLetter}` : undefined}
+    >
+      <span
+        className="h-2.5 w-2.5 rounded-full border border-border/60"
+        style={{ background: g.hex }}
+      />
+      {g.label}
     </span>
   );
 }
@@ -319,6 +346,7 @@ function OrdersPage() {
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Badge value={o.payment_method} />
+                <ColorBadge colorGroup={o.color_group} colorLetter={o.color_letter} />
                 <select
                   value={o.order_status}
                   onChange={(e) => updateStatus(o.id, "order_status", e.target.value)}
@@ -357,6 +385,7 @@ function OrdersPage() {
                 <th className="px-4 py-3">Order</th>
                 <th className="px-4 py-3">Customer</th>
                 <th className="px-4 py-3">Amount</th>
+                <th className="px-4 py-3">Color</th>
                 <th className="px-4 py-3">Payment</th>
                 <th className="px-4 py-3">Order status</th>
                 <th className="px-4 py-3">Date</th>
@@ -378,6 +407,9 @@ function OrdersPage() {
                     </p>
                   </td>
                   <td className="px-4 py-3 font-medium">₹{Number(o.total_amount)}</td>
+                  <td className="px-4 py-3">
+                    <ColorBadge colorGroup={o.color_group} colorLetter={o.color_letter} />
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col gap-1">
                       <Badge value={o.payment_method} />

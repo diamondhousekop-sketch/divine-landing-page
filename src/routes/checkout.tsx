@@ -8,6 +8,8 @@ import { getActiveProduct } from "@/lib/queries";
 import { publicPost } from "@/lib/admin-api";
 import { track } from "@/lib/analytics";
 import { GoldSwash } from "@/components/GoldSwash";
+import { ColorLetterPicker } from "@/components/ColorLetterPicker";
+import { groupForLetter } from "@/lib/rashi";
 
 const schema = z.object({
   customer_name: z.string().trim().min(2, "पूर्ण नाव टाका"),
@@ -23,12 +25,16 @@ const schema = z.object({
     .regex(/^\d{6}$/, "6 अंकी पिनकोड टाका"),
   quantity: z.coerce.number().int().min(1).max(10),
   payment_method: z.enum(["cod", "online"]),
+  color_letter: z.string().trim().min(1, "कृपया तुमच्या नावाचे अक्षर निवडा"),
 });
 type FormValues = z.input<typeof schema>;
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({ meta: [{ title: "ऑर्डर करा | Diamond House" }] }),
-  loader: async () => ({ product: await getActiveProduct() }),
+  validateSearch: (s: Record<string, unknown>): { letter?: string } =>
+    typeof s["letter"] === "string" ? { letter: s["letter"] } : {},
+  loaderDeps: ({ search }) => ({ letter: search.letter }),
+  loader: async ({ deps }) => ({ product: await getActiveProduct(), letter: deps.letter ?? "" }),
   component: Checkout,
 });
 
@@ -45,7 +51,7 @@ function loadRazorpayScript(): Promise<boolean> {
 }
 
 function Checkout() {
-  const { product } = Route.useLoaderData();
+  const { product, letter: initialLetter } = Route.useLoaderData();
   const navigate = useNavigate();
   const [onlineEnabled, setOnlineEnabled] = useState(false);
   const [codEnabled, setCodEnabled] = useState(true);
@@ -60,8 +66,10 @@ function Checkout() {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { quantity: 1, payment_method: "cod" },
+    defaultValues: { quantity: 1, payment_method: "cod", color_letter: initialLetter },
   });
+
+  const colorLetter = watch("color_letter") || "";
 
   useEffect(() => {
     fetch("/api/config")
@@ -101,6 +109,7 @@ function Checkout() {
         quantity: Number(values.quantity),
         customer_email: values.customer_email || undefined,
         product_id: product.id || undefined,
+        color_group: groupForLetter(values.color_letter)?.id,
       };
       const { order } = await publicPost<{
         order: { id: string; order_number: string; total_amount: number; payment_method: string };
@@ -190,7 +199,17 @@ function Checkout() {
             className="surface-card p-6 md:p-8"
             data-testid="checkout-form"
           >
-            <h2 className="deva text-xl text-foreground">ग्राहक माहिती</h2>
+            <h2 className="deva text-xl text-foreground">तुमचा शुभ रंग</h2>
+            <div className="surface-card mt-4 p-5">
+              <ColorLetterPicker
+                letter={colorLetter}
+                onChange={(l) => setValue("color_letter", l, { shouldValidate: true })}
+                required
+                {...(errors.color_letter?.message ? { error: errors.color_letter.message } : {})}
+              />
+            </div>
+
+            <h2 className="deva mt-8 text-xl text-foreground">ग्राहक माहिती</h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <label className="deva text-sm text-foreground">पूर्ण नाव *</label>
