@@ -111,13 +111,13 @@ All are best-effort — a failed email never blocks an order.
 ## 4. Local run
 
 ```bash
-bun install
+npm install
 cp .env.example .env      # fill in values
-bun run dev               # http://localhost:3000
+npm run dev                # http://localhost:3000
 
 # Production-style run:
-bun run build             # outputs .output/server/index.mjs (node-server preset)
-bun run start             # === node .output/server/index.mjs
+npm run build              # outputs .output/server/index.mjs (node-server preset)
+npm start                  # === node .output/server/index.mjs
 ```
 
 ---
@@ -126,6 +126,13 @@ bun run start             # === node .output/server/index.mjs
 
 Hostinger hPanel → **Websites → Node.js**.
 
+> ⚠️ **Node version is mandatory, not optional: set it to 22.x.** `@tanstack/
+> react-start` and `@supabase/supabase-js` both require Node **>=22**. Building
+> on Node 20 doesn't just risk warnings — it has already caused a real
+> production build failure here (`unstorage`'s transitive dependency
+> resolution differs between Node versions and broke on 20). Set **Node
+> version: 22** in hPanel before your next deploy, every time.
+
 > ⚠️ **Critical order-of-operations:** `VITE_*` variables (Supabase URL/anon key)
 > are baked into the app **at build time**, not read at server start. If `.env`
 > is missing or incomplete when `npm run build` runs, every page will fail with
@@ -133,14 +140,19 @@ Hostinger hPanel → **Websites → Node.js**.
 > restart the server. Always create/upload `.env` **before** running the build
 > command, and re-run the build any time a `VITE_*` value changes.
 
-1. **Node version:** 20 LTS or newer (a `ws` WebSocket polyfill is bundled so
-   Supabase realtime works on Node 20; Node 22+ works natively).
+1. **Node version: 22.x** (set this explicitly in hPanel — see warning above).
 2. Upload the repo (Git deploy or file manager). Create `.env` in the app root
    **first** (from `.env.example`, filled with real values) — before building.
    If hPanel's environment-variables section is used instead of a committed
    `.env` file, make sure those variables are set **before** the build step
    runs, not only before start.
-3. **Build command:** `npm install && npm run build`   (or `bun install && bun run build`)
+3. **Build command:** `npm install && npm run build`
+   - `npm` is this project's one canonical package manager for deployment —
+     `package-lock.json` is committed and must stay committed. Don't reintroduce
+     a `bun.lock`/`yarn.lock` alongside it; two lockfiles for two different
+     package managers is exactly what caused a prior broken-dependency build
+     (npm silently resolved a different, incompatible version of a transitive
+     package because no npm lockfile existed yet to pin it).
 4. **Start / entry file:** `.output/server/index.mjs`
    - App start command: `node .output/server/index.mjs`
    - The server reads `PORT` and `HOST` from the environment (hPanel sets these).
@@ -154,7 +166,9 @@ Hostinger hPanel → **Websites → Node.js**.
    free SSL certificate. Set `SITE_URL=https://your-domain` (used in email links).
 7. **Verify after every deploy:** open `/`, `/checkout`, and `/admin/login` in a
    browser. A 500 on all three almost always means `.env` wasn't present at
-   build time — re-run the build with `.env` in place and restart.
+   build time — re-run the build with `.env` in place and restart. A build
+   that fails outright (never reaches the app) almost always means the Node
+   version isn't set to 22 — check that first.
 
 ### Env vars on Hostinger
 Set every key from `.env.example`. Only the `VITE_*` ones reach the browser;
@@ -165,10 +179,12 @@ Set every key from `.env.example`. Only the `VITE_*` ones reach the browser;
 
 ## 6. Go-live checklist
 
-- [ ] Ran `supabase/migrations/0001_init.sql` in the Supabase SQL Editor
+- [ ] Ran `supabase/migrations/0001_init.sql`, `0002_uploadable_media.sql`, and
+      `0003_color_group.sql` (in that order) in the Supabase SQL Editor
 - [ ] Created a real admin user with your own email + a strong, unique password
 - [ ] Set all `.env` values on Hostinger (or committed nothing secret — `.env` is gitignored)
-- [ ] Verified `bun run build` produces `.output/server/index.mjs`
+- [ ] Hostinger Node version is set to **22.x**
+- [ ] Verified `npm run build` produces `.output/server/index.mjs`
 - [ ] `node .output/server/index.mjs` boots and serves `/`
 - [ ] (If using online payments) added Razorpay keys in `/admin` + webhook in Razorpay
 - [ ] Verified a verified Resend sending domain for real customer emails
