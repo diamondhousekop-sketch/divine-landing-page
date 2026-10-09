@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { getAdminClient, requireAdmin, unauthorized } from "@/lib/supabase.server";
 import { json, badRequest, serverError } from "@/lib/http.server";
+import { UPI_ID_REGEX } from "@/lib/upi";
 
 // Admin-managed PUBLIC store settings kept in admin_settings:
 //   - marketing  : Meta Pixel / GA4 / GTM / Search Console IDs (public identifiers,
@@ -28,10 +29,27 @@ const Invoicing = z.object({
   product_label: z.string().trim().max(120).optional(),
 });
 
+const Upi = z
+  .object({
+    enabled: z.boolean().optional(),
+    upi_id: z
+      .string()
+      .trim()
+      .max(260)
+      .refine((v) => v === "" || UPI_ID_REGEX.test(v), "Enter a valid UPI ID, e.g. name@okaxis")
+      .optional(),
+    payee_name: z.string().trim().max(60).optional(),
+  })
+  .refine((v) => !v.enabled || (v.upi_id !== undefined && UPI_ID_REGEX.test(v.upi_id)), {
+    message: "Add a valid UPI ID before turning UPI payments on",
+    path: ["upi_id"],
+  });
+
 const PutInput = z.object({
   marketing: Marketing.optional(),
   checkout: Checkout.optional(),
   invoicing: Invoicing.optional(),
+  upi: Upi.optional(),
 });
 
 async function readKey(admin: ReturnType<typeof getAdminClient>, key: string) {
@@ -47,15 +65,21 @@ export const Route = createFileRoute("/api/admin/store-settings")({
         if (!user) return unauthorized();
         try {
           const admin = getAdminClient();
-          const [marketing, checkout, invoicing] = await Promise.all([
+          const [marketing, checkout, invoicing, upi] = await Promise.all([
             readKey(admin, "marketing"),
             readKey(admin, "checkout"),
             readKey(admin, "invoicing"),
+            readKey(admin, "upi"),
           ]);
           return json({
             marketing,
             checkout: { cod_enabled: checkout["cod_enabled"] !== false, ...checkout },
             invoicing,
+            upi: {
+              enabled: upi["enabled"] === true,
+              upi_id: typeof upi["upi_id"] === "string" ? upi["upi_id"] : "",
+              payee_name: typeof upi["payee_name"] === "string" ? upi["payee_name"] : "",
+            },
           });
         } catch (err) {
           console.error("[store-settings GET]", err);
@@ -73,11 +97,16 @@ export const Route = createFileRoute("/api/admin/store-settings")({
           return badRequest("Invalid JSON");
         }
         const parsed = PutInput.safeParse(body);
-        if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
+        if (!parsed.success) {
+          return badRequest(
+            parsed.error.issues[0]?.message || "Validation failed",
+            parsed.error.flatten(),
+          );
+        }
         try {
           const admin = getAdminClient();
           const rows: { key: string; value: unknown }[] = [];
-          for (const key of ["marketing", "checkout", "invoicing"] as const) {
+          for (const key of ["marketing", "checkout", "invoicing", "upi"] as const) {
             const incoming = parsed.data[key];
             if (incoming === undefined) continue;
             const current = await readKey(admin, key);

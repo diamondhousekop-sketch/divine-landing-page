@@ -1,6 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Search, RefreshCw, MessageCircle, FileDown, Send, Download, Trash2 } from "lucide-react";
+import {
+  Search,
+  RefreshCw,
+  MessageCircle,
+  FileDown,
+  Send,
+  Download,
+  Trash2,
+  BadgeIndianRupee,
+} from "lucide-react";
+import { UpiVerifyDialog, upiWhatsappLink } from "@/components/admin/UpiVerifyDialog";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { adminFetch, adminDownload } from "@/lib/admin-api";
 import type { Order, OrderStatus, PaymentStatus } from "@/lib/types";
@@ -13,7 +23,7 @@ export const Route = createFileRoute("/admin/orders")({
 });
 
 const ORDER_STATUSES: OrderStatus[] = ["placed", "confirmed", "shipped", "delivered", "cancelled"];
-const PAYMENT_STATUSES: PaymentStatus[] = ["pending", "paid", "failed"];
+const PAYMENT_STATUSES: PaymentStatus[] = ["pending", "verifying", "paid", "failed"];
 
 function waPhone(phone: string): string {
   const digits = (phone || "").replace(/\D/g, "");
@@ -30,6 +40,14 @@ const STATUS_MSG: Record<string, string> = {
 };
 
 function whatsappOrderLink(o: Order): string {
+  // UPI orders still waiting at "placed"/"confirmed": send the payment-specific message.
+  if (
+    o.payment_method === "upi" &&
+    (o.payment_status === "paid" || o.payment_status === "failed") &&
+    (o.order_status === "placed" || o.order_status === "confirmed")
+  ) {
+    return upiWhatsappLink(o);
+  }
   const status = STATUS_MSG[o.order_status] || "";
   const msg = `नमस्कार ${o.customer_name} 🙏, Diamond House कडून — तुमची ऑर्डर ${o.order_number} ${status}. काही प्रश्न असल्यास कळवा.`;
   return `https://wa.me/${waPhone(o.customer_phone)}?text=${encodeURIComponent(msg)}`;
@@ -49,6 +67,7 @@ function toCsv(orders: Order[]): string {
     "payment_method",
     "payment_status",
     "order_status",
+    "upi_utr",
   ];
   const esc = (v: unknown) => {
     const s = v == null ? "" : String(v);
@@ -68,6 +87,8 @@ const statusColor: Record<string, string> = {
   cancelled: "bg-destructive/10 text-destructive",
   paid: "bg-[color-mix(in_oklab,var(--whatsapp)_20%,transparent)] text-[var(--whatsapp)]",
   pending: "bg-secondary text-secondary-foreground",
+  verifying: "bg-[color-mix(in_oklab,var(--gold)_25%,transparent)] text-navy",
+  upi: "bg-navy/10 text-navy",
   failed: "bg-destructive/10 text-destructive",
 };
 
@@ -115,6 +136,7 @@ function OrdersPage() {
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("");
+  const [verifyOrder, setVerifyOrder] = useState<Order | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -210,6 +232,30 @@ function OrdersPage() {
       setBusyId(null);
     }
   };
+
+  const upiPill = (o: Order) =>
+    o.payment_method === "upi" ? (
+      <button
+        onClick={() => setVerifyOrder(o)}
+        data-testid={`order-upi-verify-${o.order_number}`}
+        className={`deva inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
+          o.payment_status === "verifying"
+            ? "cta-gold-pulse bg-gold text-navy"
+            : "border border-border bg-card text-navy hover:bg-secondary"
+        }`}
+      >
+        <BadgeIndianRupee className="h-3.5 w-3.5" />
+        {o.payment_status === "verifying"
+          ? "पेमेंट तपासा"
+          : o.payment_status === "pending"
+            ? "स्क्रीनशॉट बाकी"
+            : "पुरावा पहा"}
+      </button>
+    ) : null;
+
+  const verifyingCount = orders.filter(
+    (o) => o.payment_method === "upi" && o.payment_status === "verifying",
+  ).length;
 
   const actionBtns = (o: Order) => (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -310,6 +356,31 @@ function OrdersPage() {
         </button>
       </div>
 
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => setPaymentFilter(paymentFilter === "verifying" ? "" : "verifying")}
+          data-testid="orders-upi-filter"
+          className={`deva inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm ${
+            paymentFilter === "verifying"
+              ? "bg-gold font-semibold text-navy"
+              : "border border-border bg-card text-foreground hover:bg-secondary"
+          }`}
+        >
+          <BadgeIndianRupee className="h-4 w-4" /> UPI पेमेंट तपासणी बाकी
+          {paymentFilter !== "verifying" && verifyingCount > 0 && (
+            <span className="rounded-full bg-gold px-1.5 text-xs font-bold text-navy">
+              {verifyingCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      <UpiVerifyDialog
+        order={verifyOrder}
+        onClose={() => setVerifyOrder(null)}
+        onUpdated={(u) => setOrders((prev) => prev.map((o) => (o.id === u.id ? u : o)))}
+      />
+
       {error && (
         <p className="mb-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
@@ -329,7 +400,7 @@ function OrdersPage() {
           {orders.map((o) => (
             <div
               key={o.id}
-              className="surface-card p-4"
+              className={`surface-card p-4 ${o.payment_status === "verifying" ? "ring-2 ring-accent/60" : ""}`}
               data-testid={`order-card-${o.order_number}`}
             >
               <div className="flex items-center justify-between">
@@ -346,6 +417,7 @@ function OrdersPage() {
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Badge value={o.payment_method} />
+                {upiPill(o)}
                 <ColorBadge colorGroup={o.color_group} colorLetter={o.color_letter} />
                 <select
                   value={o.order_status}
@@ -396,7 +468,7 @@ function OrdersPage() {
               {orders.map((o) => (
                 <tr
                   key={o.id}
-                  className="border-b border-border/60 hover:bg-secondary/40"
+                  className={`border-b border-border/60 hover:bg-secondary/40 ${o.payment_status === "verifying" ? "bg-[color-mix(in_oklab,var(--gold)_10%,transparent)]" : ""}`}
                   data-testid={`order-row-${o.order_number}`}
                 >
                   <td className="px-4 py-3 font-medium text-navy">{o.order_number}</td>
@@ -413,6 +485,7 @@ function OrdersPage() {
                   <td className="px-4 py-3">
                     <div className="flex flex-col gap-1">
                       <Badge value={o.payment_method} />
+                      {upiPill(o)}
                       <select
                         value={o.payment_status}
                         onChange={(e) => updateStatus(o.id, "payment_status", e.target.value)}

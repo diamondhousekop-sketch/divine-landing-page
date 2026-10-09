@@ -1,7 +1,8 @@
 // Shared domain types used across client and server.
 
-export type PaymentMethod = "online" | "cod";
-export type PaymentStatus = "pending" | "paid" | "failed";
+export type PaymentMethod = "online" | "cod" | "upi";
+// "verifying" = UPI proof submitted by the customer, owner has not checked it yet.
+export type PaymentStatus = "pending" | "verifying" | "paid" | "failed";
 export type OrderStatus = "placed" | "confirmed" | "shipped" | "delivered" | "cancelled";
 
 export type Product = {
@@ -48,6 +49,11 @@ export type Order = {
   razorpay_payment_id: string | null;
   color_group: string | null;
   color_letter: string | null;
+  upi_utr: string | null;
+  payment_proof_path: string | null;
+  payment_submitted_at: string | null;
+  payment_verified_at: string | null;
+  payment_note: string | null;
   created_at: string;
   updated_at: string;
 };

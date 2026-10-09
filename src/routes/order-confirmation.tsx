@@ -23,7 +23,8 @@ export const Route = createFileRoute("/order-confirmation")({
     if (typeof search["order"] === "string") result.order = search["order"];
     if (search["amt"] != null && !Number.isNaN(Number(search["amt"])))
       result.amt = Number(search["amt"]);
-    if (search["m"] === "online" || search["m"] === "cod") result.m = search["m"];
+    if (search["m"] === "online" || search["m"] === "cod" || search["m"] === "upi")
+      result.m = search["m"];
     return result;
   },
   loader: async () => ({ content: await getSiteContent() }),
@@ -38,10 +39,11 @@ function OrderConfirmation() {
   const { order, amt, m } = Route.useSearch();
   const { content } = Route.useLoaderData();
   const isOnline = m === "online";
+  const isUpi = m === "upi";
 
   // Purchase conversion — the true conversion moment (paid online orders).
   useEffect(() => {
-    if (isOnline && amt) {
+    if ((isOnline || isUpi) && amt) {
       track("Purchase", "purchase", {
         currency: "INR",
         value: amt,
@@ -57,7 +59,13 @@ function OrderConfirmation() {
   const video = toEmbed(content["founder_video_url"] || "");
 
   const steps = [
-    { icon: CheckCircle2, title: "ऑर्डर कन्फर्म", desc: "तुमची ऑर्डर आम्हाला मिळाली आहे." },
+    isUpi
+      ? {
+          icon: CheckCircle2,
+          title: "पेमेंट पडताळणी",
+          desc: "बँकेत रक्कम तपासून ऑर्डर कन्फर्म केली जाईल.",
+        }
+      : { icon: CheckCircle2, title: "ऑर्डर कन्फर्म", desc: "तुमची ऑर्डर आम्हाला मिळाली आहे." },
     {
       icon: Sparkles,
       title: "पूजा करून पॅकिंग",
@@ -80,12 +88,17 @@ function OrderConfirmation() {
             <CheckCircle2 className="h-9 w-9 text-[var(--whatsapp)]" />
           </div>
           <h1 className="deva mt-5 text-3xl font-normal text-primary md:text-4xl">
-            {isOnline ? "पेमेंट यशस्वी! धन्यवाद 🙏" : "धन्यवाद! ऑर्डर नोंदवली 🙏"}
+            {isOnline
+              ? "पेमेंट यशस्वी! धन्यवाद 🙏"
+              : isUpi
+                ? "धन्यवाद! पेमेंट मिळाल्याची माहिती आली 🙏"
+                : "धन्यवाद! ऑर्डर नोंदवली 🙏"}
           </h1>
           <GoldSwash className="mx-auto mt-3 w-44" />
           <p className="deva mx-auto mt-4 max-w-md text-base leading-relaxed text-muted-foreground">
-            स्वामींच्या आशीर्वादाने तुमची ऑर्डर निश्चित झाली आहे. खाली आमच्याकडून एक छोटासा संदेश
-            आहे.
+            {isUpi
+              ? "आम्ही बँकेत तुमचे पेमेंट तपासून लवकरच ऑर्डर कन्फर्म करू आणि WhatsApp वर कळवू. खाली आमच्याकडून एक छोटासा संदेश आहे."
+              : "स्वामींच्या आशीर्वादाने तुमची ऑर्डर निश्चित झाली आहे. खाली आमच्याकडून एक छोटासा संदेश आहे."}
           </p>
         </div>
 
@@ -136,7 +149,7 @@ function OrderConfirmation() {
             {amt != null && (
               <div className="flex justify-between">
                 <span className="deva text-muted-foreground">
-                  {isOnline ? "भरलेली रक्कम" : "रक्कम"}
+                  {isOnline || isUpi ? "भरलेली रक्कम" : "रक्कम"}
                 </span>
                 <span className="font-display text-lg font-bold text-navy">₹{amt}</span>
               </div>
@@ -144,7 +157,11 @@ function OrderConfirmation() {
             <div className="flex justify-between">
               <span className="deva text-muted-foreground">पेमेंट पद्धत</span>
               <span className="text-foreground">
-                {isOnline ? "Online (Razorpay) ✅" : "रोख (डिलिव्हरी वेळी) 💵"}
+                {isOnline
+                  ? "Online (Razorpay) ✅"
+                  : isUpi
+                    ? "UPI — पडताळणी सुरू ⏳"
+                    : "रोख (डिलिव्हरी वेळी) 💵"}
               </span>
             </div>
           </div>

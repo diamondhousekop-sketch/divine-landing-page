@@ -250,9 +250,13 @@ export async function buildInvoicePdf(
       ? order.payment_status === "paid"
         ? "COD - PAID"
         : "Cash on Delivery"
-      : order.payment_status === "paid"
-        ? "PAID ONLINE (Razorpay)"
-        : "Online - Pending";
+      : order.payment_method === "upi"
+        ? order.payment_status === "paid"
+          ? "PAID via UPI"
+          : "UPI - Verification pending"
+        : order.payment_status === "paid"
+          ? "PAID ONLINE (Razorpay)"
+          : "Online - Pending";
   text(`Payment: ${payLabel}`, M, ry, 10, bold, C.navy);
 
   // ── Footer note ──

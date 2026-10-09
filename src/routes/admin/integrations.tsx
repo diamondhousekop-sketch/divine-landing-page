@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, Save, BarChart3, Truck, FileText } from "lucide-react";
+import { Loader2, Save, BarChart3, Truck, FileText, Smartphone } from "lucide-react";
+import { UPI_ID_REGEX } from "@/lib/upi";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { adminFetch } from "@/lib/admin-api";
 
@@ -37,6 +38,8 @@ function IntegrationsPage() {
     gsc_verification: "",
   });
   const [codEnabled, setCodEnabled] = useState(true);
+  const [upi, setUpi] = useState({ enabled: false, upi_id: "", payee_name: "" });
+  const upiIdInvalid = upi.upi_id.trim() !== "" && !UPI_ID_REGEX.test(upi.upi_id.trim());
   const [invoicing, setInvoicing] = useState<Invoicing>({
     prefix: "DH",
     business_name: "Diamond House",
@@ -54,7 +57,13 @@ function IntegrationsPage() {
           marketing: Partial<Marketing>;
           checkout: { cod_enabled?: boolean };
           invoicing: Partial<Invoicing>;
+          upi?: { enabled?: boolean; upi_id?: string; payee_name?: string };
         }>("/api/admin/store-settings");
+        setUpi({
+          enabled: d.upi?.enabled === true,
+          upi_id: d.upi?.upi_id ?? "",
+          payee_name: d.upi?.payee_name ?? "",
+        });
         setMarketing((p) => ({ ...p, ...d.marketing }));
         setCodEnabled(d.checkout?.cod_enabled !== false);
         setInvoicing((p) => ({ ...p, ...d.invoicing }));
@@ -67,12 +76,25 @@ function IntegrationsPage() {
   }, []);
 
   const save = async () => {
-    setSaving(true);
     setMsg(null);
+    if (upiIdInvalid || (upi.enabled && !UPI_ID_REGEX.test(upi.upi_id.trim()))) {
+      setMsg("UPI ID बरोबर टाका (उदा. diamondhouse@okaxis) — मगच UPI सुरू करा.");
+      return;
+    }
+    setSaving(true);
     try {
       await adminFetch("/api/admin/store-settings", {
         method: "PUT",
-        body: { marketing, checkout: { cod_enabled: codEnabled }, invoicing },
+        body: {
+          marketing,
+          checkout: { cod_enabled: codEnabled },
+          invoicing,
+          upi: {
+            enabled: upi.enabled,
+            upi_id: upi.upi_id.trim(),
+            payee_name: upi.payee_name.trim(),
+          },
+        },
       });
       setMsg("जतन झाले! ✅");
     } catch (e) {
@@ -175,6 +197,57 @@ function IntegrationsPage() {
             )}
           </div>
 
+          {/* Direct UPI payments */}
+          <div className="surface-card p-6 lg:col-span-2" data-testid="integrations-upi">
+            <h2 className="flex items-center gap-2 text-lg text-foreground">
+              <Smartphone className="h-5 w-5 text-accent" /> UPI Payment (no gateway)
+            </h2>
+            <p className="deva mt-1 text-xs text-muted-foreground">
+              ग्राहक थेट या UPI ID वर पैसे भरतो आणि स्क्रीनशॉट अपलोड करतो. पैसे थेट तुमच्या बँक
+              खात्यात येतात — कोणतीही फी नाही. Orders मध्ये बँक तपासून “पेमेंट मिळाले” दाबा.
+            </p>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="text-sm text-foreground">UPI ID (VPA)</label>
+                <input
+                  className={inputCls}
+                  value={upi.upi_id}
+                  placeholder="e.g. diamondhouse@okaxis"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  onChange={(e) => setUpi({ ...upi, upi_id: e.target.value })}
+                  data-testid="cfg-upi-id"
+                />
+                {upiIdInvalid && (
+                  <p className="mt-1 text-xs text-destructive">
+                    Invalid UPI ID — format: name@bank
+                  </p>
+                )}
+              </div>
+              {field(
+                "Payee name (as shown in UPI apps)",
+                upi.payee_name,
+                (v) => setUpi({ ...upi, payee_name: v }),
+                "cfg-upi-name",
+                "Diamond House",
+              )}
+            </div>
+            <label className="mt-5 flex items-center gap-3 text-sm">
+              <input
+                type="checkbox"
+                checked={upi.enabled}
+                onChange={(e) => setUpi({ ...upi, enabled: e.target.checked })}
+                data-testid="cfg-upi-enabled"
+              />
+              <span className="deva">Checkout वर UPI पेमेंट सुरू करा</span>
+            </label>
+            <p className="deva mt-3 rounded-xl bg-secondary/60 px-4 py-2.5 text-xs text-muted-foreground">
+              टीप: व्यवसायाचे पेमेंट्स शक्यतो current account / business UPI वर घ्या. सेव्ह केल्यावर
+              स्वतः एक टेस्ट ऑर्डर करून QR, पेमेंट व स्क्रीनशॉट अपलोड तपासा.
+            </p>
+          </div>
+
           {/* Business / Invoice */}
           <div className="surface-card p-6 lg:col-span-2" data-testid="integrations-invoicing">
             <h2 className="flex items-center gap-2 text-lg text-foreground">
@@ -248,7 +321,10 @@ function IntegrationsPage() {
             जतन करा
           </button>
           {msg && (
-            <span className="deva text-sm text-[var(--whatsapp)]" data-testid="settings-msg">
+            <span
+              className={`deva text-sm ${msg.includes("✅") ? "text-[var(--whatsapp)]" : "text-destructive"}`}
+              data-testid="settings-msg"
+            >
               {msg}
             </span>
           )}

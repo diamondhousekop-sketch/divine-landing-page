@@ -8,7 +8,7 @@ import { generateInvoice } from "@/lib/invoice.server";
 const PatchInput = z.object({
   id: z.string().uuid(),
   order_status: z.enum(["placed", "confirmed", "shipped", "delivered", "cancelled"]).optional(),
-  payment_status: z.enum(["pending", "paid", "failed"]).optional(),
+  payment_status: z.enum(["pending", "verifying", "paid", "failed"]).optional(),
 });
 
 export const Route = createFileRoute("/api/admin/orders")({
@@ -32,9 +32,14 @@ export const Route = createFileRoute("/api/admin/orders")({
             .limit(500);
           if (status) query = query.eq("order_status", status);
           if (payment) query = query.eq("payment_status", payment);
-          if (q) {
+          // Strip PostgREST filter syntax characters so a search can't alter the query.
+          const safeQ = (q || "")
+            .replace(/[,()%*\\:"']/g, " ")
+            .trim()
+            .slice(0, 60);
+          if (safeQ) {
             query = query.or(
-              `order_number.ilike.%${q}%,customer_name.ilike.%${q}%,customer_phone.ilike.%${q}%`,
+              `order_number.ilike.%${safeQ}%,customer_name.ilike.%${safeQ}%,customer_phone.ilike.%${safeQ}%`,
             );
           }
           const { data, error } = await query;
@@ -63,9 +68,12 @@ export const Route = createFileRoute("/api/admin/orders")({
 
         try {
           const admin = getAdminClient();
+          const row: Record<string, unknown> = { ...updates };
+          if (updates.payment_status === "paid")
+            row["payment_verified_at"] = new Date().toISOString();
           const { data: order, error } = await admin
             .from("orders")
-            .update(updates)
+            .update(row)
             .eq("id", id)
             .select("*")
             .single();

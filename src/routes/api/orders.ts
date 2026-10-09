@@ -4,6 +4,7 @@ import { getAdminClient } from "@/lib/supabase.server";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit.server";
 import { json, badRequest, serverError, generateOrderNumber } from "@/lib/http.server";
 import { sendOrderConfirmation, sendAdminAlert } from "@/lib/email.server";
+import { getUpiSettings, upiReady, signProofToken } from "@/lib/upi.server";
 
 const OrderInput = z.object({
   customer_name: z.string().trim().min(2).max(120),
@@ -18,7 +19,7 @@ const OrderInput = z.object({
     .trim()
     .regex(/^\d{6}$/, "Enter a valid 6-digit pincode"),
   quantity: z.number().int().min(1).max(10).default(1),
-  payment_method: z.enum(["online", "cod"]),
+  payment_method: z.enum(["online", "cod", "upi"]),
   product_id: z.string().uuid().optional(),
   color_letter: z.string().trim().max(10).optional().or(z.literal("")),
   color_group: z.enum(["red", "white", "green", "yellow", "grey"]).optional(),
@@ -78,6 +79,18 @@ export const Route = createFileRoute("/api/orders")({
             }
           }
 
+          // Direct UPI: only when the owner enabled it and saved a valid UPI ID.
+          let upi: Awaited<ReturnType<typeof getUpiSettings>> | null = null;
+          if (input.payment_method === "upi") {
+            const s = await getUpiSettings(admin);
+            if (!upiReady(s)) {
+              return badRequest(
+                "UPI payment is currently unavailable. Please choose another option.",
+              );
+            }
+            upi = s;
+          }
+
           const total = Number(product.price) * input.quantity;
           const orderNumber = generateOrderNumber();
 
@@ -111,10 +124,12 @@ export const Route = createFileRoute("/api/orders")({
 
           // COD orders are confirmed immediately — fire order confirmation + admin alert.
           // Online orders trigger emails after payment verification instead.
+          // UPI orders alert the owner only once the customer uploads the payment
+          // proof (/api/payment/upi-proof), so abandoned checkouts don't spam.
           if (input.payment_method === "cod") {
             void sendOrderConfirmation(order, order.customer_email ?? undefined);
             void sendAdminAlert(order);
-          } else {
+          } else if (input.payment_method === "online") {
             void sendAdminAlert(order);
           }
 
@@ -125,6 +140,15 @@ export const Route = createFileRoute("/api/orders")({
               total_amount: Number(order.total_amount),
               payment_method: order.payment_method,
             },
+            ...(upi
+              ? {
+                  upi: {
+                    upi_id: upi.upi_id,
+                    payee_name: upi.payee_name || "Diamond House",
+                    proof_token: signProofToken(order.id),
+                  },
+                }
+              : {}),
           });
         } catch (err) {
           console.error("[orders] unexpected:", err);

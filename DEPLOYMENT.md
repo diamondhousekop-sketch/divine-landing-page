@@ -94,6 +94,39 @@ Online payment is **admin-toggleable**. Until configured, checkout offers **COD 
 
 ---
 
+## 2b. Direct UPI payments (no gateway) — added Oct 2026
+
+Use this when payment gateways won't approve the store. Money goes straight to
+the owner's bank via UPI; no gateway fee.
+
+1. Run `supabase/migrations/0004_upi_payments.sql` (already applied on the live
+   project). It adds the `upi` payment method, the `verifying` payment status,
+   UTR/screenshot columns, a unique UTR index, and a **private**
+   `payment-proofs` storage bucket.
+2. `/admin/integrations` → **UPI Payment** → enter UPI ID + payee name → tick
+   *Checkout वर UPI पेमेंट सुरू करा* → Save.
+3. Place one test order yourself on a phone and complete the full flow.
+
+**Customer flow:** checkout → choose UPI → order is created → pay from any UPI
+app (deep link on phones, QR on desktop, copyable UPI ID) → upload screenshot
+(+ optional 12-digit UTR) → order becomes `verifying` → thank-you page.
+
+**Owner flow:** admin alert email + gold "पेमेंट तपासा" badge in Orders →
+open it → see screenshot, amount, UTR → **check the money in your own bank/UPI
+app** → tick the confirmation box → *पेमेंट मिळाले* (order becomes paid + confirmed,
+invoice emailed) or *मिळाले नाही* → one-tap WhatsApp message to the customer.
+
+**Safety built in:** the amount always comes from the server; screenshots are
+checked by file bytes (JPG/PNG/WEBP only, max 5MB), stored privately, and shown
+to admins only via 5-minute signed links; each order gets its own HMAC upload
+token; one UTR cannot be reused across orders; a screenshot never marks an order
+paid on its own. Optional env `UPI_PROOF_SECRET` (falls back to the service-role key).
+
+UPI orders still in `pending` with "स्क्रीनशॉट बाकी" are abandoned checkouts —
+do not ship them unless the money is in the bank.
+
+---
+
 ## 3. Resend setup (transactional emails)
 
 1. Resend → **API Keys** → create key → set `RESEND_API_KEY` (already set for testing).
@@ -179,8 +212,9 @@ Set every key from `.env.example`. Only the `VITE_*` ones reach the browser;
 
 ## 6. Go-live checklist
 
-- [ ] Ran `supabase/migrations/0001_init.sql`, `0002_uploadable_media.sql`, and
-      `0003_color_group.sql` (in that order) in the Supabase SQL Editor
+- [ ] Ran `supabase/migrations/0001_init.sql`, `0002_uploadable_media.sql`,
+      `0003_color_group.sql` and `0004_upi_payments.sql` (in that order) in the Supabase SQL Editor
+- [ ] (If using UPI) saved UPI ID + payee name in `/admin/integrations` and placed a real test UPI order
 - [ ] Created a real admin user with your own email + a strong, unique password
 - [ ] Set all `.env` values on Hostinger (or committed nothing secret — `.env` is gitignored)
 - [ ] Hostinger Node version is set to **22.x**

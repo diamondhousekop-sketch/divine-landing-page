@@ -1,7 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
-import { IndianRupee, ShoppingBag, Clock, TrendingUp, PackageX } from "lucide-react";
+import {
+  IndianRupee,
+  ShoppingBag,
+  Clock,
+  TrendingUp,
+  PackageX,
+  BadgeIndianRupee,
+} from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { adminFetch } from "@/lib/admin-api";
 import type { Order, Product } from "@/lib/types";
@@ -41,6 +48,10 @@ function Dashboard() {
   const ordersToday = list.filter((o) => new Date(o.created_at).getTime() >= today).length;
   const pendingCod = list.filter(
     (o) => o.payment_method === "cod" && o.order_status === "placed",
+  ).length;
+
+  const upiToVerify = list.filter(
+    (o) => o.payment_method === "upi" && o.payment_status === "verifying",
   ).length;
 
   const outOfStock = products.filter((p) => p.is_active && Number(p.stock_quantity) <= 0);
@@ -88,6 +99,18 @@ function Dashboard() {
         <p className="mb-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </p>
+      )}
+      {upiToVerify > 0 && (
+        <Link
+          to="/admin/orders"
+          className="mb-4 flex items-center gap-2 rounded-xl border border-accent/60 bg-[color-mix(in_oklab,var(--gold)_15%,transparent)] px-4 py-3 text-sm text-navy"
+          data-testid="dashboard-upi-verify"
+        >
+          <BadgeIndianRupee className="h-4 w-4 text-accent" />
+          <span className="deva">
+            {upiToVerify} UPI पेमेंट तपासणी बाकी — बँकेत तपासून Orders मध्ये कन्फर्म करा →
+          </span>
+        </Link>
       )}
       {outOfStock.length > 0 && (
         <div

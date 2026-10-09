@@ -183,6 +183,14 @@ function TrackPage() {
             </div>
             <p className="deva mt-1 text-xs text-muted-foreground">
               {result.customer_name} · पिन {result.pincode} · {result.payment_method.toUpperCase()}
+              {result.payment_method === "upi" &&
+                (result.payment_status === "paid"
+                  ? " · पेमेंट मिळाले ✅"
+                  : result.payment_status === "verifying"
+                    ? " · पेमेंट पडताळणी सुरू ⏳"
+                    : result.payment_status === "failed"
+                      ? " · पेमेंट मिळाले नाही — संपर्क करा"
+                      : " · पेमेंट बाकी")}
             </p>
 
             {cancelled ? (

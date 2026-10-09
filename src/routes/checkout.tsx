@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2, ShieldCheck, Truck, Phone } from "lucide-react";
+import { UpiPayPanel, type UpiPending } from "@/components/UpiPayPanel";
 import { getActiveProduct } from "@/lib/queries";
 import { publicPost } from "@/lib/admin-api";
 import { track } from "@/lib/analytics";
@@ -24,7 +25,7 @@ const schema = z.object({
     .trim()
     .regex(/^\d{6}$/, "6 अंकी पिनकोड टाका"),
   quantity: z.coerce.number().int().min(1).max(10),
-  payment_method: z.enum(["cod", "online"]),
+  payment_method: z.enum(["cod", "online", "upi"]),
   color_letter: z.string().trim().min(1, "कृपया तुमच्या नावाचे अक्षर निवडा"),
 });
 type FormValues = z.input<typeof schema>;
@@ -50,6 +51,33 @@ function loadRazorpayScript(): Promise<boolean> {
   });
 }
 
+// Remembers an in-progress UPI payment for this tab, so returning from the UPI
+// app (or an accidental refresh) brings the customer back to the upload step.
+const UPI_KEY = "dh_upi_pending";
+const UPI_TTL_MS = 6 * 60 * 60 * 1000;
+function loadUpiPending(): UpiPending | null {
+  try {
+    const raw = sessionStorage.getItem(UPI_KEY);
+    if (!raw) return null;
+    const v = JSON.parse(raw) as UpiPending & { savedAt?: number };
+    if (!v?.order?.id || !v?.upi?.proof_token || Date.now() - (v.savedAt ?? 0) > UPI_TTL_MS) {
+      sessionStorage.removeItem(UPI_KEY);
+      return null;
+    }
+    return { order: v.order, upi: v.upi };
+  } catch {
+    return null;
+  }
+}
+function saveUpiPending(v: UpiPending | null) {
+  try {
+    if (v) sessionStorage.setItem(UPI_KEY, JSON.stringify({ ...v, savedAt: Date.now() }));
+    else sessionStorage.removeItem(UPI_KEY);
+  } catch {
+    /* storage blocked — the panel still works for this page view */
+  }
+}
+
 function Checkout() {
   const { product, letter: initialLetter } = Route.useLoaderData();
   const navigate = useNavigate();
@@ -57,6 +85,13 @@ function Checkout() {
   const [codEnabled, setCodEnabled] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [upiEnabled, setUpiEnabled] = useState(false);
+  const [upiPending, setUpiPending] = useState<UpiPending | null>(null);
+
+  useEffect(() => {
+    const saved = loadUpiPending();
+    if (saved) setUpiPending(saved);
+  }, []);
 
   const {
     register,
@@ -78,8 +113,12 @@ function Checkout() {
         setOnlineEnabled(!!d.online_enabled);
         const cod = d.cod_enabled !== false;
         setCodEnabled(cod);
-        // If the owner turned COD off, default to online payment.
-        if (!cod && d.online_enabled) setValue("payment_method", "online");
+        const upi = !!d.upi_enabled;
+        setUpiEnabled(upi);
+        // Prefer prepaid UPI when the owner enabled it; otherwise keep COD,
+        // and fall back to online if COD was switched off.
+        if (upi) setValue("payment_method", "upi");
+        else if (!cod && d.online_enabled) setValue("payment_method", "online");
       })
       .catch(() => {
         setOnlineEnabled(false);
@@ -111,9 +150,27 @@ function Checkout() {
         product_id: product.id || undefined,
         color_group: groupForLetter(values.color_letter)?.id,
       };
-      const { order } = await publicPost<{
+      const { order, upi } = await publicPost<{
         order: { id: string; order_number: string; total_amount: number; payment_method: string };
+        upi?: { upi_id: string; payee_name: string; proof_token: string };
       }>("/api/orders", payload);
+
+      if (values.payment_method === "upi") {
+        if (!upi) throw new Error("UPI पेमेंट सध्या उपलब्ध नाही. कृपया दुसरी पद्धत निवडा.");
+        const pending: UpiPending = {
+          order: {
+            id: order.id,
+            order_number: order.order_number,
+            total_amount: order.total_amount,
+          },
+          upi,
+        };
+        saveUpiPending(pending);
+        setUpiPending(pending);
+        setSubmitting(false);
+        if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
 
       if (values.payment_method === "cod") {
         navigate({
@@ -193,164 +250,199 @@ function Checkout() {
         </div>
 
         <div className="mt-10 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
-          {/* FORM */}
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="surface-card p-6 md:p-8"
-            data-testid="checkout-form"
-          >
-            <h2 className="deva text-xl text-foreground">तुमचा शुभ रंग</h2>
-            <div className="surface-card mt-4 p-5">
-              <ColorLetterPicker
-                letter={colorLetter}
-                onChange={(l) => setValue("color_letter", l, { shouldValidate: true })}
-                required
-                {...(errors.color_letter?.message ? { error: errors.color_letter.message } : {})}
-              />
-            </div>
-
-            <h2 className="deva mt-8 text-xl text-foreground">ग्राहक माहिती</h2>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <label className="deva text-sm text-foreground">पूर्ण नाव *</label>
-                <input
-                  className={inputCls}
-                  data-testid="input-name"
-                  {...register("customer_name")}
-                />
-                {errors.customer_name && (
-                  <p className="deva mt-1 text-xs text-destructive">
-                    {errors.customer_name.message}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="deva text-sm text-foreground">मोबाईल नंबर *</label>
-                <input
-                  className={inputCls}
-                  data-testid="input-phone"
-                  inputMode="numeric"
-                  placeholder="9876543210"
-                  {...register("customer_phone")}
-                />
-                {errors.customer_phone && (
-                  <p className="deva mt-1 text-xs text-destructive">
-                    {errors.customer_phone.message}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="deva text-sm text-foreground">ईमेल (ऐच्छिक)</label>
-                <input
-                  className={inputCls}
-                  data-testid="input-email"
-                  type="email"
-                  placeholder="you@example.com"
-                  {...register("customer_email")}
-                />
-                {errors.customer_email && (
-                  <p className="deva mt-1 text-xs text-destructive">
-                    {errors.customer_email.message}
-                  </p>
-                )}
-              </div>
-              <div className="sm:col-span-2">
-                <label className="deva text-sm text-foreground">संपूर्ण पत्ता *</label>
-                <textarea
-                  rows={3}
-                  className={inputCls}
-                  data-testid="input-address"
-                  placeholder="घर क्र., गल्ली, गाव/शहर"
-                  {...register("customer_address")}
-                />
-                {errors.customer_address && (
-                  <p className="deva mt-1 text-xs text-destructive">
-                    {errors.customer_address.message}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="deva text-sm text-foreground">पिनकोड *</label>
-                <input
-                  className={inputCls}
-                  data-testid="input-pincode"
-                  inputMode="numeric"
-                  placeholder="416001"
-                  {...register("customer_pincode")}
-                />
-                {errors.customer_pincode && (
-                  <p className="deva mt-1 text-xs text-destructive">
-                    {errors.customer_pincode.message}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="deva text-sm text-foreground">संख्या</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={10}
-                  className={inputCls}
-                  data-testid="input-quantity"
-                  {...register("quantity")}
-                />
-              </div>
-            </div>
-
-            <h2 className="deva mt-8 text-xl text-foreground">पेमेंट पद्धत</h2>
-            <div className="mt-4 space-y-3">
-              <label
-                className={`surface-card flex items-center gap-3 px-4 py-3 ${codEnabled ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}
-              >
-                <input
-                  type="radio"
-                  value="cod"
-                  disabled={!codEnabled}
-                  data-testid="payment-cod"
-                  {...register("payment_method")}
-                />
-                <span className="deva text-sm text-foreground">
-                  Cash on Delivery — घरपोच आल्यावर पैसे द्या 🚚
-                  {!codEnabled && " (सध्या बंद)"}
-                </span>
-              </label>
-              <label
-                className={`surface-card flex items-center gap-3 px-4 py-3 ${onlineEnabled ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}
-              >
-                <input
-                  type="radio"
-                  value="online"
-                  disabled={!onlineEnabled}
-                  data-testid="payment-online"
-                  {...register("payment_method")}
-                />
-                <span className="deva text-sm text-foreground">
-                  Online Payment (UPI / Card) {onlineEnabled ? "🔒" : "— लवकरच उपलब्ध"}
-                </span>
-              </label>
-            </div>
-
-            {serverError && (
-              <p
-                className="deva mt-5 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive"
-                data-testid="checkout-error"
-              >
-                {serverError}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={submitting}
-              data-testid="checkout-submit"
-              className="shimmer cta-gold-pulse relative mt-6 inline-flex min-h-[54px] w-full items-center justify-center overflow-hidden rounded-full bg-navy px-8 text-base font-semibold tracking-wide text-gold-light transition-transform duration-200 hover:scale-[1.02] disabled:opacity-70"
+          {/* FORM (or UPI payment step once the order is created) */}
+          {upiPending ? (
+            <UpiPayPanel
+              pending={upiPending}
+              onPaid={(r) => {
+                saveUpiPending(null);
+                navigate({
+                  to: "/order-confirmation",
+                  search: { order: r.order_number, amt: r.total_amount, m: "upi" },
+                });
+              }}
+            />
+          ) : (
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="surface-card p-6 md:p-8"
+              data-testid="checkout-form"
             >
-              <span className="deva relative z-10 flex items-center gap-2">
-                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                {submitting ? "प्रक्रिया सुरू आहे…" : `आत्ताच मागवा · ₹${total}`}
-              </span>
-            </button>
-          </form>
+              <h2 className="deva text-xl text-foreground">तुमचा शुभ रंग</h2>
+              <div className="surface-card mt-4 p-5">
+                <ColorLetterPicker
+                  letter={colorLetter}
+                  onChange={(l) => setValue("color_letter", l, { shouldValidate: true })}
+                  required
+                  {...(errors.color_letter?.message ? { error: errors.color_letter.message } : {})}
+                />
+              </div>
+
+              <h2 className="deva mt-8 text-xl text-foreground">ग्राहक माहिती</h2>
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <label className="deva text-sm text-foreground">पूर्ण नाव *</label>
+                  <input
+                    className={inputCls}
+                    data-testid="input-name"
+                    {...register("customer_name")}
+                  />
+                  {errors.customer_name && (
+                    <p className="deva mt-1 text-xs text-destructive">
+                      {errors.customer_name.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="deva text-sm text-foreground">मोबाईल नंबर *</label>
+                  <input
+                    className={inputCls}
+                    data-testid="input-phone"
+                    inputMode="numeric"
+                    placeholder="9876543210"
+                    {...register("customer_phone")}
+                  />
+                  {errors.customer_phone && (
+                    <p className="deva mt-1 text-xs text-destructive">
+                      {errors.customer_phone.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="deva text-sm text-foreground">ईमेल (ऐच्छिक)</label>
+                  <input
+                    className={inputCls}
+                    data-testid="input-email"
+                    type="email"
+                    placeholder="you@example.com"
+                    {...register("customer_email")}
+                  />
+                  {errors.customer_email && (
+                    <p className="deva mt-1 text-xs text-destructive">
+                      {errors.customer_email.message}
+                    </p>
+                  )}
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="deva text-sm text-foreground">संपूर्ण पत्ता *</label>
+                  <textarea
+                    rows={3}
+                    className={inputCls}
+                    data-testid="input-address"
+                    placeholder="घर क्र., गल्ली, गाव/शहर"
+                    {...register("customer_address")}
+                  />
+                  {errors.customer_address && (
+                    <p className="deva mt-1 text-xs text-destructive">
+                      {errors.customer_address.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="deva text-sm text-foreground">पिनकोड *</label>
+                  <input
+                    className={inputCls}
+                    data-testid="input-pincode"
+                    inputMode="numeric"
+                    placeholder="416001"
+                    {...register("customer_pincode")}
+                  />
+                  {errors.customer_pincode && (
+                    <p className="deva mt-1 text-xs text-destructive">
+                      {errors.customer_pincode.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="deva text-sm text-foreground">संख्या</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={10}
+                    className={inputCls}
+                    data-testid="input-quantity"
+                    {...register("quantity")}
+                  />
+                </div>
+              </div>
+
+              <h2 className="deva mt-8 text-xl text-foreground">पेमेंट पद्धत</h2>
+              <div className="mt-4 space-y-3">
+                {upiEnabled && (
+                  <label className="surface-card flex cursor-pointer items-center gap-3 px-4 py-3">
+                    <input
+                      type="radio"
+                      value="upi"
+                      data-testid="payment-upi"
+                      {...register("payment_method")}
+                    />
+                    <span className="deva text-sm text-foreground">
+                      UPI — GPay / PhonePe / Paytm ✅
+                      <span className="block text-xs text-muted-foreground">
+                        थेट पेमेंट करा, स्क्रीनशॉट अपलोड करा — लगेच ऑर्डर कन्फर्म
+                      </span>
+                    </span>
+                  </label>
+                )}
+                <label
+                  className={`surface-card flex items-center gap-3 px-4 py-3 ${codEnabled ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}
+                >
+                  <input
+                    type="radio"
+                    value="cod"
+                    disabled={!codEnabled}
+                    data-testid="payment-cod"
+                    {...register("payment_method")}
+                  />
+                  <span className="deva text-sm text-foreground">
+                    Cash on Delivery — घरपोच आल्यावर पैसे द्या 🚚
+                    {!codEnabled && " (सध्या बंद)"}
+                  </span>
+                </label>
+                {(onlineEnabled || !upiEnabled) && (
+                  <label
+                    className={`surface-card flex items-center gap-3 px-4 py-3 ${onlineEnabled ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}
+                  >
+                    <input
+                      type="radio"
+                      value="online"
+                      disabled={!onlineEnabled}
+                      data-testid="payment-online"
+                      {...register("payment_method")}
+                    />
+                    <span className="deva text-sm text-foreground">
+                      Online Payment (UPI / Card) {onlineEnabled ? "🔒" : "— लवकरच उपलब्ध"}
+                    </span>
+                  </label>
+                )}
+              </div>
+
+              {serverError && (
+                <p
+                  className="deva mt-5 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive"
+                  data-testid="checkout-error"
+                >
+                  {serverError}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={submitting}
+                data-testid="checkout-submit"
+                className="shimmer cta-gold-pulse relative mt-6 inline-flex min-h-[54px] w-full items-center justify-center overflow-hidden rounded-full bg-navy px-8 text-base font-semibold tracking-wide text-gold-light transition-transform duration-200 hover:scale-[1.02] disabled:opacity-70"
+              >
+                <span className="deva relative z-10 flex items-center gap-2">
+                  {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {submitting
+                    ? "प्रक्रिया सुरू आहे…"
+                    : watch("payment_method") === "upi"
+                      ? `पुढे — UPI ने ₹${total} भरा`
+                      : `आत्ताच मागवा · ₹${total}`}
+                </span>
+              </button>
+            </form>
+          )}
 
           {/* SUMMARY */}
           <aside className="h-fit space-y-4">

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { getRazorpayConfig } from "@/lib/razorpay.server";
 import { getAdminClient } from "@/lib/supabase.server";
 import { json } from "@/lib/http.server";
+import { UPI_ID_REGEX } from "@/lib/upi";
 
 // Public, client-safe config: whether online payment is available (+ public
 // Razorpay key id) and the PUBLIC marketing identifiers (Meta Pixel / GA4 / GTM
@@ -14,17 +15,26 @@ export const Route = createFileRoute("/api/config")({
 
         let marketing: Record<string, string> = {};
         let codEnabled = true;
+        let upi = { enabled: false, upi_id: "", payee_name: "" };
         try {
           const admin = getAdminClient();
           const { data } = await admin
             .from("admin_settings")
             .select("key,value")
-            .in("key", ["marketing", "checkout"]);
+            .in("key", ["marketing", "checkout", "upi"]);
           for (const row of data ?? []) {
             if (row.key === "marketing" && row.value) {
               marketing = row.value as Record<string, string>;
             } else if (row.key === "checkout" && row.value) {
               codEnabled = (row.value as { cod_enabled?: boolean }).cod_enabled !== false;
+            } else if (row.key === "upi" && row.value) {
+              const v = row.value as { enabled?: boolean; upi_id?: string; payee_name?: string };
+              const id = (v.upi_id || "").trim();
+              upi = {
+                enabled: v.enabled === true && UPI_ID_REGEX.test(id),
+                upi_id: id,
+                payee_name: (v.payee_name || "").trim(),
+              };
             }
           }
         } catch {
@@ -35,6 +45,10 @@ export const Route = createFileRoute("/api/config")({
           online_enabled: !!cfg,
           cod_enabled: codEnabled,
           razorpay_key_id: cfg?.key_id ?? "",
+          // The UPI ID is public by nature (every payer sees it in their app).
+          upi_enabled: upi.enabled,
+          upi_id: upi.enabled ? upi.upi_id : "",
+          upi_payee_name: upi.enabled ? upi.payee_name || "Diamond House" : "",
           meta_pixel_id: marketing["meta_pixel_id"] ?? "",
           ga4_id: marketing["ga4_id"] ?? "",
           gtm_id: marketing["gtm_id"] ?? "",

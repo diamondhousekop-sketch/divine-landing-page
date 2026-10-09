@@ -35,6 +35,16 @@ function siteUrl(): string {
   return process.env["SITE_URL"] || "http://localhost:3000";
 }
 
+// Customer-typed text must never become HTML inside an email.
+function esc(v: unknown): string {
+  return String(v ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 type OrderLike = {
   order_number: string;
   customer_name: string;
@@ -65,12 +75,19 @@ function shell(title: string, bodyHtml: string): string {
 }
 
 function orderTable(order: OrderLike): string {
-  const method = order.payment_method === "cod" ? "Cash on Delivery (COD)" : "Online (Razorpay)";
+  const method =
+    order.payment_method === "cod"
+      ? "Cash on Delivery (COD)"
+      : order.payment_method === "upi"
+        ? order.payment_status === "paid"
+          ? "UPI — received ✅"
+          : "UPI — verification pending ⏳"
+        : "Online (Razorpay)";
   return `<table style="width:100%;border-collapse:collapse;font-size:14px;">
-    <tr><td style="padding:6px 0;color:#6b5b4b;">ऑर्डर क्र. / Order No.</td><td style="padding:6px 0;text-align:right;font-weight:bold;">${order.order_number}</td></tr>
-    <tr><td style="padding:6px 0;color:#6b5b4b;">ग्राहक / Name</td><td style="padding:6px 0;text-align:right;">${order.customer_name}</td></tr>
-    <tr><td style="padding:6px 0;color:#6b5b4b;">फोन / Phone</td><td style="padding:6px 0;text-align:right;">${order.customer_phone}</td></tr>
-    <tr><td style="padding:6px 0;color:#6b5b4b;">पत्ता / Address</td><td style="padding:6px 0;text-align:right;">${order.customer_address}, ${order.customer_pincode}</td></tr>
+    <tr><td style="padding:6px 0;color:#6b5b4b;">ऑर्डर क्र. / Order No.</td><td style="padding:6px 0;text-align:right;font-weight:bold;">${esc(order.order_number)}</td></tr>
+    <tr><td style="padding:6px 0;color:#6b5b4b;">ग्राहक / Name</td><td style="padding:6px 0;text-align:right;">${esc(order.customer_name)}</td></tr>
+    <tr><td style="padding:6px 0;color:#6b5b4b;">फोन / Phone</td><td style="padding:6px 0;text-align:right;">${esc(order.customer_phone)}</td></tr>
+    <tr><td style="padding:6px 0;color:#6b5b4b;">पत्ता / Address</td><td style="padding:6px 0;text-align:right;">${esc(order.customer_address)}, ${esc(order.customer_pincode)}</td></tr>
     <tr><td style="padding:6px 0;color:#6b5b4b;">संख्या / Qty</td><td style="padding:6px 0;text-align:right;">${order.quantity}</td></tr>
     <tr><td style="padding:6px 0;color:#6b5b4b;">पेमेंट / Payment</td><td style="padding:6px 0;text-align:right;">${method}</td></tr>
     <tr><td style="padding:10px 0;color:${BRAND.maroon};font-weight:bold;">एकूण / Total</td><td style="padding:10px 0;text-align:right;color:${BRAND.maroon};font-weight:bold;font-size:18px;">₹${order.total_amount}</td></tr>
@@ -104,11 +121,11 @@ export async function sendOrderConfirmation(order: OrderLike, customerEmail?: st
   if (!customerEmail) return; // customer email is optional in the checkout form
   const html = shell(
     "तुमची ऑर्डर मिळाली! / Order received",
-    `<p style="font-size:15px;line-height:1.7;">नमस्कार ${order.customer_name},<br>तुमची इच्छापूर्ती लकी स्टोन ऑर्डर यशस्वीरित्या नोंदवली गेली आहे. 🙏</p>
+    `<p style="font-size:15px;line-height:1.7;">नमस्कार ${esc(order.customer_name)},<br>तुमची इच्छापूर्ती लकी स्टोन ऑर्डर यशस्वीरित्या नोंदवली गेली आहे. 🙏</p>
      <p style="font-size:13px;color:#6b5b4b;">Your order has been placed successfully. We will contact you shortly on your phone.</p>
      ${orderTable(order)}`,
   );
-  await send(customerEmail, `Diamond House — ऑर्डर ${order.order_number} मिळाली`, html);
+  await send(customerEmail, `Diamond House — ऑर्डर ${esc(order.order_number)} मिळाली`, html);
 }
 
 export async function sendPaymentConfirmation(
@@ -122,7 +139,7 @@ export async function sendPaymentConfirmation(
     : "";
   const html = shell(
     "पेमेंट यशस्वी / Payment successful",
-    `<p style="font-size:15px;line-height:1.7;">धन्यवाद ${order.customer_name}! तुमचे पेमेंट यशस्वीरित्या प्राप्त झाले आहे. ✅</p>
+    `<p style="font-size:15px;line-height:1.7;">धन्यवाद ${esc(order.customer_name)}! तुमचे पेमेंट यशस्वीरित्या प्राप्त झाले आहे. ✅</p>
      <p style="font-size:13px;color:#6b5b4b;">Your payment has been received. Your order is now confirmed.</p>
      ${orderTable(order)}
      ${invoiceLine}`,
@@ -132,7 +149,7 @@ export async function sendPaymentConfirmation(
     : undefined;
   await send(
     customerEmail,
-    `Diamond House — पेमेंट मिळाले (${order.order_number})`,
+    `Diamond House — पेमेंट मिळाले (${esc(order.order_number)})`,
     html,
     attachments,
   );
@@ -148,27 +165,35 @@ export async function sendInvoiceEmail(
   if (!customerEmail) return;
   const html = shell(
     "तुमचे बिल / Your invoice",
-    `<p style="font-size:15px;line-height:1.7;">नमस्कार ${order.customer_name},<br>तुमच्या ऑर्डरचे बिल (Invoice ${invoice.number}) सोबत जोडले आहे. 🙏</p>
+    `<p style="font-size:15px;line-height:1.7;">नमस्कार ${esc(order.customer_name)},<br>तुमच्या ऑर्डरचे बिल (Invoice ${invoice.number}) सोबत जोडले आहे. 🙏</p>
      <p style="font-size:13px;color:#6b5b4b;">Please find your invoice attached as a PDF.</p>
      ${orderTable(order)}`,
   );
-  await send(customerEmail, `Diamond House — बिल ${invoice.number} (${order.order_number})`, html, [
-    { filename: `Invoice-${invoice.number}.pdf`, content: Buffer.from(invoice.pdf) },
-  ]);
+  await send(
+    customerEmail,
+    `Diamond House — बिल ${invoice.number} (${esc(order.order_number)})`,
+    html,
+    [{ filename: `Invoice-${invoice.number}.pdf`, content: Buffer.from(invoice.pdf) }],
+  );
 }
 
 export async function sendAdminAlert(order: OrderLike) {
   const to = process.env["ADMIN_ALERT_EMAIL"];
   if (!to) return;
+  const upiNote =
+    order.payment_method === "upi"
+      ? `<p style="font-size:14px;background:#FFF4D6;border:1px solid ${BRAND.gold};border-radius:10px;padding:10px 12px;">⚠️ UPI payment screenshot received. <b>Check ₹${order.total_amount} in your bank / UPI app first</b>, then press “Payment received” in the admin panel. Never ship on a screenshot alone.</p>`
+      : "";
   const html = shell(
     "🔔 नवीन ऑर्डर / New order",
     `<p style="font-size:15px;">A new order has been placed on the website.</p>
+     ${upiNote}
      ${orderTable(order)}
      <p style="margin-top:16px;"><a href="${siteUrl()}/admin/orders" style="background:${BRAND.navy};color:${BRAND.goldLight};padding:10px 20px;border-radius:999px;text-decoration:none;font-size:14px;">Open Admin Panel</a></p>`,
   );
   await send(
     to,
-    `🔔 New order ${order.order_number} — ₹${order.total_amount} (${order.payment_method.toUpperCase()})`,
+    `🔔 New order ${esc(order.order_number)} — ₹${order.total_amount} (${order.payment_method.toUpperCase()})`,
     html,
   );
 }
@@ -177,20 +202,20 @@ export async function sendShippingUpdate(order: OrderLike, customerEmail?: strin
   if (!customerEmail) return;
   const html = shell(
     "तुमची ऑर्डर पाठवली आहे / Order shipped",
-    `<p style="font-size:15px;line-height:1.7;">नमस्कार ${order.customer_name}, तुमची ऑर्डर पाठवण्यात आली आहे. 🚚</p>
+    `<p style="font-size:15px;line-height:1.7;">नमस्कार ${esc(order.customer_name)}, तुमची ऑर्डर पाठवण्यात आली आहे. 🚚</p>
      <p style="font-size:13px;color:#6b5b4b;">Your order is on the way and will reach you in 2–5 working days.</p>
      ${orderTable(order)}`,
   );
-  await send(customerEmail, `Diamond House — ऑर्डर पाठवली (${order.order_number})`, html);
+  await send(customerEmail, `Diamond House — ऑर्डर पाठवली (${esc(order.order_number)})`, html);
 }
 
 export async function sendDeliveryConfirmation(order: OrderLike, customerEmail?: string) {
   if (!customerEmail) return;
   const html = shell(
     "ऑर्डर पोहोचली / Delivered",
-    `<p style="font-size:15px;line-height:1.7;">नमस्कार ${order.customer_name}, तुमची ऑर्डर पोहोचली आहे. 🙏 स्वामींचा आशीर्वाद तुमच्यासोबत राहो.</p>
+    `<p style="font-size:15px;line-height:1.7;">नमस्कार ${esc(order.customer_name)}, तुमची ऑर्डर पोहोचली आहे. 🙏 स्वामींचा आशीर्वाद तुमच्यासोबत राहो.</p>
      <p style="font-size:13px;color:#6b5b4b;">Your order has been delivered. Thank you for trusting Diamond House.</p>
      ${orderTable(order)}`,
   );
-  await send(customerEmail, `Diamond House — ऑर्डर पोहोचली (${order.order_number})`, html);
+  await send(customerEmail, `Diamond House — ऑर्डर पोहोचली (${esc(order.order_number)})`, html);
 }
