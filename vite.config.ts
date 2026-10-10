@@ -18,6 +18,10 @@ export default defineConfig({
   // `npx wrangler deploy` ships it. Inside a Lovable build, LOVABLE_NITRO_PRESET
   // still pins Cloudflare.
   nitro: {
-    preset: process.env.NITRO_PRESET || "node-server",
+    preset: process.env["NITRO_PRESET"] || "node-server",
+    // Cloudflare only: must match the Worker name in the dashboard
+    // (otherwise Workers Builds fails with a name-mismatch error).
+    // `wrangler` is accepted by Nitro at runtime but missing from its type.
+    cloudflare: { wrangler: { name: "divine-landing-page" } } as Record<string, unknown>,
   },
 });
