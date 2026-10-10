@@ -13,12 +13,15 @@ export default defineConfig({
     server: { entry: "server" },
   },
   // Default = Hostinger/VPS Node server (`node .output/server/index.mjs`).
-  // For Cloudflare Workers set the build variable NITRO_PRESET=cloudflare-module:
+  // Cloudflare Workers Builds sets WORKERS_CI=1, which auto-selects cloudflare-module
+  // (or set NITRO_PRESET=cloudflare-module by hand):
   // Nitro then generates .output/server/wrangler.json (nodejs_compat on) and
   // `npx wrangler deploy` ships it. Inside a Lovable build, LOVABLE_NITRO_PRESET
   // still pins Cloudflare.
   nitro: {
-    preset: process.env["NITRO_PRESET"] || "node-server",
+    preset:
+      process.env["NITRO_PRESET"] ||
+      (process.env["WORKERS_CI"] ? "cloudflare-module" : "node-server"),
     // Cloudflare only: must match the Worker name in the dashboard
     // (otherwise Workers Builds fails with a name-mismatch error).
     // `wrangler` is accepted by Nitro at runtime but missing from its type.
