@@ -12,11 +12,12 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
-  // Hostinger Node.js hosting: override Nitro's default (cloudflare) preset with
-  // the Node server preset. This produces `.output/server/index.mjs`, runnable via
-  // `node .output/server/index.mjs`. Inside a Lovable build, LOVABLE_NITRO_PRESET
-  // still pins Cloudflare, so this override only takes effect for self-hosted builds.
+  // Default = Hostinger/VPS Node server (`node .output/server/index.mjs`).
+  // For Cloudflare Workers set the build variable NITRO_PRESET=cloudflare-module:
+  // Nitro then generates .output/server/wrangler.json (nodejs_compat on) and
+  // `npx wrangler deploy` ships it. Inside a Lovable build, LOVABLE_NITRO_PRESET
+  // still pins Cloudflare.
   nitro: {
-    preset: "node-server",
+    preset: process.env.NITRO_PRESET || "node-server",
   },
 });
