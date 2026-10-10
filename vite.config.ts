@@ -25,6 +25,9 @@ export default defineConfig({
     // Cloudflare only: must match the Worker name in the dashboard
     // (otherwise Workers Builds fails with a name-mismatch error).
     // `wrangler` is accepted by Nitro at runtime but missing from its type.
-    cloudflare: { wrangler: { name: "divine-landing-page" } } as Record<string, unknown>,
+    // `previews: {}` lets non-production branches deploy with `wrangler preview`.
+    cloudflare: {
+      wrangler: { name: "divine-landing-page", previews: {} },
+    } as Record<string, unknown>,
   },
 });
