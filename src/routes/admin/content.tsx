@@ -220,6 +220,8 @@ function ContentPage() {
                   value={rzp.key_id}
                   onChange={(e) => setRzp({ ...rzp, key_id: e.target.value })}
                   data-testid="rzp-key-id"
+                  autoComplete="off"
+                  name="rzp-key-id"
                   placeholder="rzp_test_xxxxxxxx"
                 />
               </div>
@@ -236,6 +238,8 @@ function ContentPage() {
                   value={rzp.key_secret}
                   onChange={(e) => setRzp({ ...rzp, key_secret: e.target.value })}
                   data-testid="rzp-key-secret"
+                  autoComplete="new-password"
+                  name="rzp-key-secret"
                   placeholder={
                     rzpInfo.has_key_secret ? "•••••• (बदलण्यासाठी नवीन टाका)" : "key secret"
                   }
@@ -254,6 +258,8 @@ function ContentPage() {
                   value={rzp.webhook_secret}
                   onChange={(e) => setRzp({ ...rzp, webhook_secret: e.target.value })}
                   data-testid="rzp-webhook-secret"
+                  autoComplete="new-password"
+                  name="rzp-webhook-secret"
                   placeholder={
                     rzpInfo.has_webhook_secret ? "•••••• (बदलण्यासाठी नवीन टाका)" : "webhook secret"
                   }

@@ -27,6 +27,7 @@ import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
 import { Route as AdminProductsRouteImport } from './routes/admin/products'
 import { Route as AdminTestimonialsRouteImport } from './routes/admin/testimonials'
 import { Route as ApiConfigRouteImport } from './routes/api/config'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiOrdersRouteImport } from './routes/api/orders'
 import { Route as ApiTrackRouteImport } from './routes/api/track'
 import { Route as ApiAdminContentRouteImport } from './routes/api/admin/content'
@@ -135,6 +136,11 @@ const ApiConfigRoute = ApiConfigRouteImport.update({
   path: '/api/config',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiOrdersRoute = ApiOrdersRouteImport.update({
   id: '/api/orders',
   path: '/api/orders',
@@ -234,6 +240,7 @@ export interface FileRoutesByFullPath {
   '/admin/products': typeof AdminProductsRoute
   '/admin/testimonials': typeof AdminTestimonialsRoute
   '/api/config': typeof ApiConfigRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/orders': typeof ApiOrdersRoute
   '/api/track': typeof ApiTrackRoute
   '/admin/': typeof AdminIndexRoute
@@ -270,6 +277,7 @@ export interface FileRoutesByTo {
   '/admin/products': typeof AdminProductsRoute
   '/admin/testimonials': typeof AdminTestimonialsRoute
   '/api/config': typeof ApiConfigRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/orders': typeof ApiOrdersRoute
   '/api/track': typeof ApiTrackRoute
   '/admin': typeof AdminIndexRoute
@@ -307,6 +315,7 @@ export interface FileRoutesById {
   '/admin/products': typeof AdminProductsRoute
   '/admin/testimonials': typeof AdminTestimonialsRoute
   '/api/config': typeof ApiConfigRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/orders': typeof ApiOrdersRoute
   '/api/track': typeof ApiTrackRoute
   '/admin/': typeof AdminIndexRoute
@@ -345,6 +354,7 @@ export interface FileRouteTypes {
     | '/admin/products'
     | '/admin/testimonials'
     | '/api/config'
+    | '/api/health'
     | '/api/orders'
     | '/api/track'
     | '/admin/'
@@ -381,6 +391,7 @@ export interface FileRouteTypes {
     | '/admin/products'
     | '/admin/testimonials'
     | '/api/config'
+    | '/api/health'
     | '/api/orders'
     | '/api/track'
     | '/admin'
@@ -417,6 +428,7 @@ export interface FileRouteTypes {
     | '/admin/products'
     | '/admin/testimonials'
     | '/api/config'
+    | '/api/health'
     | '/api/orders'
     | '/api/track'
     | '/admin/'
@@ -454,6 +466,7 @@ export interface RootRouteChildren {
   AdminProductsRoute: typeof AdminProductsRoute
   AdminTestimonialsRoute: typeof AdminTestimonialsRoute
   ApiConfigRoute: typeof ApiConfigRoute
+  ApiHealthRoute: typeof ApiHealthRoute
   ApiOrdersRoute: typeof ApiOrdersRoute
   ApiTrackRoute: typeof ApiTrackRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -601,6 +614,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiConfigRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/orders': {
       id: '/api/orders'
       path: '/api/orders'
@@ -734,6 +754,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminProductsRoute: AdminProductsRoute,
   AdminTestimonialsRoute: AdminTestimonialsRoute,
   ApiConfigRoute: ApiConfigRoute,
+  ApiHealthRoute: ApiHealthRoute,
   ApiOrdersRoute: ApiOrdersRoute,
   ApiTrackRoute: ApiTrackRoute,
   AdminIndexRoute: AdminIndexRoute,

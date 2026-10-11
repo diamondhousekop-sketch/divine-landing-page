@@ -34,9 +34,14 @@ export async function requireAdmin(request: Request) {
   try {
     const admin = getAdminClient();
     const { data, error } = await admin.auth.getUser(token);
-    if (error || !data?.user) return null;
+    if (error || !data?.user) {
+      console.error("[requireAdmin] token rejected:", error?.message);
+      return null;
+    }
     return data.user;
-  } catch {
+  } catch (err) {
+    // Almost always a missing SUPABASE_SERVICE_ROLE_KEY — see /api/health.
+    console.error("[requireAdmin] server misconfigured:", (err as Error).message);
     return null;
   }
 }
