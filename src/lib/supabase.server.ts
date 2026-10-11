@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { getEnv } from "@/lib/env.server";
 
 // SERVER-ONLY Supabase client using the service role key. This module must never
 // be imported from client-bundled code. It is only imported inside server route
@@ -12,10 +13,9 @@ let cached: SupabaseClient | null = null;
 export function getAdminClient(): SupabaseClient {
   if (cached) return cached;
   // URL is a public value; use the Vite-injected constant which is available on
-  // both server and client builds. The service role key is a secret from process.env.
-  const url =
-    (import.meta.env["VITE_SUPABASE_URL"] as string) || process.env["VITE_SUPABASE_URL"] || "";
-  const serviceKey = process.env["SUPABASE_SERVICE_ROLE_KEY"] || "";
+  // both server and client builds. The service role key is a secret from the host env.
+  const url = (import.meta.env["VITE_SUPABASE_URL"] as string) || getEnv("VITE_SUPABASE_URL") || "";
+  const serviceKey = getEnv("SUPABASE_SERVICE_ROLE_KEY") || "";
   if (!url || !serviceKey) {
     throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY or Supabase URL on the server");
   }

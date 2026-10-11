@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { getEnv } from "@/lib/env.server";
 
 // SERVER-ONLY email helpers using Resend. Bilingual (Marathi + English) HTML
 // templates in the maroon/gold/navy brand palette. All sends are best-effort:
@@ -16,13 +17,13 @@ const BRAND = {
 };
 
 function resendClient(): Resend | null {
-  const key = process.env["RESEND_API_KEY"];
+  const key = getEnv("RESEND_API_KEY");
   if (!key) return null;
   return new Resend(key);
 }
 
 function fromAddress(): string {
-  const from = process.env["RESEND_FROM_EMAIL"];
+  const from = getEnv("RESEND_FROM_EMAIL");
   // Resend requires a verified sender domain. If not provided, fall back to
   // Resend's shared test sender which works in sandbox mode.
   if (!from || !/@/.test(from) || /gmai\.com$|@gmail\.com$/i.test(from)) {
@@ -32,7 +33,7 @@ function fromAddress(): string {
 }
 
 function siteUrl(): string {
-  return process.env["SITE_URL"] || "http://localhost:3000";
+  return getEnv("SITE_URL") || "http://localhost:3000";
 }
 
 // Customer-typed text must never become HTML inside an email.
@@ -178,7 +179,7 @@ export async function sendInvoiceEmail(
 }
 
 export async function sendAdminAlert(order: OrderLike) {
-  const to = process.env["ADMIN_ALERT_EMAIL"];
+  const to = getEnv("ADMIN_ALERT_EMAIL");
   if (!to) return;
   const upiNote =
     order.payment_method === "upi"

@@ -1,6 +1,7 @@
 import Razorpay from "razorpay";
 import crypto from "node:crypto";
 import { getAdminClient } from "./supabase.server";
+import { getEnv } from "@/lib/env.server";
 
 // Razorpay credentials are admin-configurable: they live in the `admin_settings`
 // table (service-role only, never exposed to the client) under key "razorpay".
@@ -32,9 +33,9 @@ export async function getRazorpayConfig(): Promise<RazorpayConfig | null> {
     // fall through to env
   }
 
-  const key_id = cfg.key_id || process.env["RAZORPAY_KEY_ID"] || "";
-  const key_secret = cfg.key_secret || process.env["RAZORPAY_KEY_SECRET"] || "";
-  const webhook_secret = cfg.webhook_secret || process.env["RAZORPAY_WEBHOOK_SECRET"] || "";
+  const key_id = cfg.key_id || getEnv("RAZORPAY_KEY_ID") || "";
+  const key_secret = cfg.key_secret || getEnv("RAZORPAY_KEY_SECRET") || "";
+  const webhook_secret = cfg.webhook_secret || getEnv("RAZORPAY_WEBHOOK_SECRET") || "";
 
   if (isPlaceholder(key_id) || isPlaceholder(key_secret)) return null;
   return { key_id, key_secret, webhook_secret, enabled: true };

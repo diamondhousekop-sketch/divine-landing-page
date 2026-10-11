@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { UPI_ID_REGEX } from "./upi";
+import { getEnv } from "@/lib/env.server";
 
 // SERVER-ONLY helpers for direct-UPI payments.
 if (typeof window !== "undefined") {
@@ -35,7 +36,7 @@ export function upiReady(s: UpiSettings): boolean {
 // The checkout gets a token for ITS OWN order only. Without it nobody can
 // attach a screenshot to someone else's order by guessing an order id.
 function secret(): string {
-  const s = process.env["UPI_PROOF_SECRET"] || process.env["SUPABASE_SERVICE_ROLE_KEY"] || "";
+  const s = getEnv("UPI_PROOF_SECRET") || getEnv("SUPABASE_SERVICE_ROLE_KEY") || "";
   if (!s) throw new Error("Missing server secret for UPI proof tokens");
   return s;
 }

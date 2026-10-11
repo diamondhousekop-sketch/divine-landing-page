@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getAdminClient } from "@/lib/supabase.server";
 import { json } from "@/lib/http.server";
+import { getEnv, visibleEnvNames } from "@/lib/env.server";
 
 // Public setup check. It reports ONLY yes/no (never a value) so you can open
 // /api/health after a deploy and see exactly which setting is missing or wrong.
-const env = (k: string) => (process.env[k] || "").trim();
+const env = getEnv;
 
 export const Route = createFileRoute("/api/health")({
   server: {
@@ -46,7 +47,15 @@ export const Route = createFileRoute("/api/health")({
         ];
         const ok = required.every((k) => checks[k]) && database_ok && auth_ok;
         return json(
-          { ok, checks, database_ok, admin_login_check_ok: auth_ok, hint },
+          {
+            ok,
+            checks,
+            database_ok,
+            admin_login_check_ok: auth_ok,
+            hint,
+            // Variable NAMES the host handed to the server (never values).
+            seen_by_server: visibleEnvNames(),
+          },
           ok ? 200 : 503,
         );
       },
