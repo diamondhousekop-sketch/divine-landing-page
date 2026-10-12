@@ -22,3 +22,77 @@ export function buildUpiLink(cfg: UpiPublicConfig, amount: number, orderNumber: 
   ];
   return `upi://pay?${q.join("&")}`;
 }
+
+// ---- One-tap links for individual UPI apps -------------------------------------
+export type UpiPlatform = "android" | "ios" | "other";
+
+export function detectPlatform(ua: string): UpiPlatform {
+  if (/Android/i.test(ua)) return "android";
+  if (/iPhone|iPad|iPod/i.test(ua)) return "ios";
+  return "other";
+}
+
+export type UpiApp = {
+  id: "gpay" | "phonepe" | "paytm" | "bhim" | "cred";
+  name: string;
+  mono: string; // short monogram shown on the tile (we do not ship brand logos)
+  androidPackage: string;
+  iosPrefix: string; // scheme + path that precedes "?<upi params>"
+};
+
+export const UPI_APPS: UpiApp[] = [
+  {
+    id: "gpay",
+    name: "Google Pay",
+    mono: "G",
+    androidPackage: "com.google.android.apps.nbu.paisa.user",
+    iosPrefix: "gpay://upi/pay",
+  },
+  {
+    id: "phonepe",
+    name: "PhonePe",
+    mono: "Pe",
+    androidPackage: "com.phonepe.app",
+    iosPrefix: "phonepe://pay",
+  },
+  {
+    id: "paytm",
+    name: "Paytm",
+    mono: "Pt",
+    androidPackage: "net.one97.paytm",
+    iosPrefix: "paytmmp://pay",
+  },
+  {
+    id: "bhim",
+    name: "BHIM",
+    mono: "B",
+    androidPackage: "in.org.npci.upiapp",
+    iosPrefix: "upi://pay",
+  },
+  {
+    id: "cred",
+    name: "CRED",
+    mono: "C",
+    androidPackage: "com.dreamplug.androidapp",
+    iosPrefix: "credpay://upi/pay",
+  },
+];
+
+// Deep link that opens ONE specific app with payee, fixed amount and order note
+// already filled. Android uses an intent that targets the app's package; iOS uses the
+// app's own URL scheme. Anything else falls back to the generic upi:// link.
+export function buildAppLink(
+  app: UpiApp,
+  cfg: UpiPublicConfig,
+  amount: number,
+  orderNumber: string,
+  platform: UpiPlatform,
+): string {
+  const generic = buildUpiLink(cfg, amount, orderNumber);
+  const params = generic.slice("upi://pay?".length);
+  if (platform === "android") {
+    return `intent://pay?${params}#Intent;scheme=upi;package=${app.androidPackage};end`;
+  }
+  if (platform === "ios") return `${app.iosPrefix}?${params}`;
+  return generic;
+}

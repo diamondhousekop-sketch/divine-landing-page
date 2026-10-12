@@ -10,7 +10,15 @@ import {
   Smartphone,
   X,
 } from "lucide-react";
-import { buildUpiLink, UTR_REGEX } from "@/lib/upi";
+import {
+  buildAppLink,
+  buildUpiLink,
+  detectPlatform,
+  UPI_APPS,
+  UTR_REGEX,
+  type UpiPlatform,
+} from "@/lib/upi";
+import { UpiAppTile } from "@/components/UpiAppBadges";
 import { publicPost } from "@/lib/admin-api";
 
 export type UpiPending = {
@@ -54,12 +62,12 @@ async function compressImage(file: File): Promise<string> {
   }
 }
 
-function useIsPhone() {
-  const [phone, setPhone] = useState(false);
+function usePlatform(): UpiPlatform {
+  const [platform, setPlatform] = useState<UpiPlatform>("other");
   useEffect(() => {
-    setPhone(/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent));
+    setPlatform(detectPlatform(navigator.userAgent));
   }, []);
-  return phone;
+  return platform;
 }
 
 export function UpiPayPanel({
@@ -70,7 +78,8 @@ export function UpiPayPanel({
   onPaid: (r: { order_number: string; total_amount: number }) => void;
 }) {
   const { order, upi } = pending;
-  const isPhone = useIsPhone();
+  const platform = usePlatform();
+  const isPhone = platform !== "other";
   const link = useMemo(
     () => buildUpiLink(upi, order.total_amount, order.order_number),
     [upi, order.total_amount, order.order_number],
@@ -199,14 +208,33 @@ export function UpiPayPanel({
         </p>
 
         {isPhone && (
-          <a
-            href={link}
-            data-testid="upi-open-app"
-            className="shimmer cta-gold-pulse relative mt-4 inline-flex min-h-[54px] w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-[var(--whatsapp)] px-6 text-base font-semibold text-white"
-          >
-            <Smartphone className="relative z-10 h-5 w-5" />
-            <span className="deva relative z-10">UPI ॲपने ₹{order.total_amount} भरा</span>
-          </a>
+          <div className="mt-4" data-testid="upi-app-picker">
+            <p className="deva text-center text-xs text-muted-foreground">
+              तुमच्या UPI ॲपवर टॅप करा — ₹{order.total_amount} आणि दुकानाची UPI ID आपोआप भरली जाईल
+            </p>
+            <div className="mt-3 grid grid-cols-5 gap-2">
+              {UPI_APPS.map((app) => (
+                <a
+                  key={app.id}
+                  href={buildAppLink(app, upi, order.total_amount, order.order_number, platform)}
+                  data-testid={`upi-app-${app.id}`}
+                  className="flex flex-col items-center rounded-2xl border border-border bg-card px-1 py-2.5 transition active:scale-95"
+                >
+                  <UpiAppTile app={app} compact />
+                </a>
+              ))}
+            </div>
+            <a
+              href={link}
+              data-testid="upi-open-app"
+              className="shimmer cta-gold-pulse relative mt-4 inline-flex min-h-[54px] w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-[var(--whatsapp)] px-6 text-base font-semibold text-white"
+            >
+              <Smartphone className="relative z-10 h-5 w-5" />
+              <span className="deva relative z-10">
+                इतर कोणत्याही UPI ॲपने ₹{order.total_amount} भरा
+              </span>
+            </a>
+          </div>
         )}
 
         {(!isPhone || showQr) && qr && (

@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2, ShieldCheck, Truck, Phone } from "lucide-react";
 import { UpiPayPanel, type UpiPending } from "@/components/UpiPayPanel";
+import { UpiTrustStrip } from "@/components/UpiAppBadges";
 import { getActiveProduct } from "@/lib/queries";
 import { publicPost } from "@/lib/admin-api";
 import { track } from "@/lib/analytics";
@@ -271,6 +272,7 @@ function Checkout() {
               className="surface-card p-6 md:p-8"
               data-testid="checkout-form"
             >
+              {upiEnabled && <UpiTrustStrip />}
               <h2 className="deva text-xl text-foreground">तुमचा शुभ रंग</h2>
               <div className="surface-card mt-4 p-5">
                 <ColorLetterPicker
