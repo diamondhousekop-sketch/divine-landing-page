@@ -112,6 +112,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     }
     return {
       meta,
+      scripts: [
+        {
+          children:
+            "(function(){function a(l){l.media='all'}document.querySelectorAll('link[data-fonts]').forEach(function(l){if(l.sheet)a(l);else l.addEventListener('load',function(){a(l)});setTimeout(function(){a(l)},4000)})})();",
+        },
+      ],
       links: [
         {
           rel: "stylesheet",
@@ -122,7 +128,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         {
           rel: "stylesheet",
           href: "https://fonts.googleapis.com/css2?family=Marcellus&family=Playfair+Display:wght@500;700&family=Poppins:wght@300;400;500;600;700&family=Tiro+Devanagari+Marathi&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap",
-        },
+          // Non-blocking: if Google Fonts is slow/blocked on a network, the page
+          // still paints with fallback fonts instead of hanging.
+          media: "print",
+          "data-fonts": "1",
+        } as Record<string, string>,
         { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
         { rel: "icon", href: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
         { rel: "icon", href: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
