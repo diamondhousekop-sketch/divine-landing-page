@@ -36,7 +36,7 @@ export const Route = createFileRoute("/api/track")({
         const { data } = await admin
           .from("orders")
           .select(
-            "order_number,customer_name,customer_phone,customer_pincode,order_status,payment_status,payment_method,quantity,total_amount,created_at,updated_at",
+            "order_number,customer_name,customer_phone,customer_pincode,order_status,payment_status,payment_method,quantity,total_amount,shipping_amount,cod_fee,created_at,updated_at",
           )
           .eq("order_number", parsed.data.order_number.trim())
           .maybeSingle();
@@ -56,6 +56,8 @@ export const Route = createFileRoute("/api/track")({
             payment_method: data.payment_method,
             quantity: data.quantity,
             total_amount: Number(data.total_amount),
+            shipping_amount: Number(data.shipping_amount ?? 0),
+            cod_fee: Number(data.cod_fee ?? 0),
             created_at: data.created_at,
             updated_at: data.updated_at,
           },

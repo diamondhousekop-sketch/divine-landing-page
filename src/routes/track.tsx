@@ -41,6 +41,8 @@ type OrderResult = {
   payment_method: string;
   quantity: number;
   total_amount: number;
+  shipping_amount?: number;
+  cod_fee?: number;
   created_at: string;
 };
 
@@ -181,6 +183,14 @@ function TrackPage() {
                 ₹{result.total_amount}
               </span>
             </div>
+            {(Number(result.shipping_amount) > 0 || Number(result.cod_fee) > 0) && (
+              <p className="deva mt-1 text-right text-[11px] text-muted-foreground">
+                {Number(result.shipping_amount) > 0 &&
+                  `डिलिव्हरी ₹${result.shipping_amount} समाविष्ट`}
+                {Number(result.shipping_amount) > 0 && Number(result.cod_fee) > 0 && " · "}
+                {Number(result.cod_fee) > 0 && `COD शुल्क ₹${result.cod_fee} समाविष्ट`}
+              </p>
+            )}
             <p className="deva mt-1 text-xs text-muted-foreground">
               {result.customer_name} · पिन {result.pincode} · {result.payment_method.toUpperCase()}
               {result.payment_method === "upi" &&

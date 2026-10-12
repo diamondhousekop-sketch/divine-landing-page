@@ -42,6 +42,8 @@ export type Order = {
   product_id: string | null;
   quantity: number;
   total_amount: number;
+  shipping_amount: number;
+  cod_fee: number;
   payment_method: PaymentMethod;
   payment_status: PaymentStatus;
   order_status: OrderStatus;

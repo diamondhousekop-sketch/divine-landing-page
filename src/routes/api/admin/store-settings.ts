@@ -4,6 +4,7 @@ import { getAdminClient, requireAdmin, unauthorized } from "@/lib/supabase.serve
 import { json, badRequest, serverError } from "@/lib/http.server";
 import { UPI_ID_REGEX } from "@/lib/upi";
 import { getRazorpayConfig } from "@/lib/razorpay.server";
+import { normalizeShipping } from "@/lib/shipping";
 
 // Admin-managed PUBLIC store settings kept in admin_settings:
 //   - marketing  : Meta Pixel / GA4 / GTM / Search Console IDs (public identifiers,
@@ -46,7 +47,28 @@ const Upi = z
     path: ["upi_id"],
   });
 
+const Shipping = z.object({
+  enabled: z.boolean(),
+  flat_fee: z.number().min(0).max(10000),
+  free_above: z.number().min(0).max(1000000),
+  cod_fee: z.number().min(0).max(10000),
+  note: z.string().trim().max(160).optional(),
+  zones: z
+    .array(
+      z.object({
+        label: z.string().trim().max(40),
+        prefixes: z
+          .array(z.string().regex(/^\d{1,6}$/, "Pincode prefix must be 1–6 digits"))
+          .max(100),
+        fee: z.number().min(0).max(10000),
+      }),
+    )
+    .max(20),
+});
+
 const PutInput = z.object({
+  color_picker_enabled: z.boolean().optional(),
+  shipping: Shipping.optional(),
   marketing: Marketing.optional(),
   checkout: Checkout.optional(),
   invoicing: Invoicing.optional(),
@@ -66,13 +88,21 @@ export const Route = createFileRoute("/api/admin/store-settings")({
         if (!user) return unauthorized();
         try {
           const admin = getAdminClient();
-          const [marketing, checkout, invoicing, upi] = await Promise.all([
+          const [marketing, checkout, invoicing, upi, shipping, colorRow] = await Promise.all([
             readKey(admin, "marketing"),
             readKey(admin, "checkout"),
             readKey(admin, "invoicing"),
             readKey(admin, "upi"),
+            readKey(admin, "shipping"),
+            admin
+              .from("site_content")
+              .select("value")
+              .eq("key", "feature_color_picker")
+              .maybeSingle(),
           ]);
           return json({
+            color_picker_enabled: colorRow.data?.value !== "off",
+            shipping: normalizeShipping(shipping),
             marketing,
             checkout: { cod_enabled: checkout["cod_enabled"] !== false, ...checkout },
             invoicing,
@@ -107,13 +137,18 @@ export const Route = createFileRoute("/api/admin/store-settings")({
         try {
           const admin = getAdminClient();
           const rows: { key: string; value: unknown }[] = [];
+          if (parsed.data.shipping) {
+            rows.push({ key: "shipping", value: normalizeShipping(parsed.data.shipping) });
+          }
           for (const key of ["marketing", "checkout", "invoicing", "upi"] as const) {
             const incoming = parsed.data[key];
             if (incoming === undefined) continue;
             const current = await readKey(admin, key);
             rows.push({ key, value: { ...current, ...incoming } });
           }
-          if (rows.length === 0) return badRequest("Nothing to update");
+          if (rows.length === 0 && parsed.data.color_picker_enabled === undefined) {
+            return badRequest("Nothing to update");
+          }
           // Safety net: never let the shop end up with NO way to pay.
           const finalOf = (k: string) =>
             (rows.find((r) => r.key === k)?.value as Record<string, unknown> | undefined) ?? null;
@@ -131,8 +166,24 @@ export const Route = createFileRoute("/api/admin/store-settings")({
               );
             }
           }
-          const { error } = await admin.from("admin_settings").upsert(rows, { onConflict: "key" });
-          if (error) return serverError("Could not save settings");
+          if (rows.length > 0) {
+            const { error } = await admin
+              .from("admin_settings")
+              .upsert(rows, { onConflict: "key" });
+            if (error) return serverError("Could not save settings");
+          }
+          if (parsed.data.color_picker_enabled !== undefined) {
+            // Lives in the public site_content table so the landing page can hide the
+            // picker during server-side rendering (no flash of the old UI).
+            const { error } = await admin.from("site_content").upsert(
+              {
+                key: "feature_color_picker",
+                value: parsed.data.color_picker_enabled ? "on" : "off",
+              },
+              { onConflict: "key" },
+            );
+            if (error) return serverError("Could not save settings");
+          }
           return json({ ok: true });
         } catch (err) {
           console.error("[store-settings PUT]", err);

@@ -63,6 +63,8 @@ function toCsv(orders: Order[]): string {
     "customer_address",
     "customer_pincode",
     "quantity",
+    "shipping_amount",
+    "cod_fee",
     "total_amount",
     "payment_method",
     "payment_status",
@@ -409,6 +411,13 @@ function OrdersPage() {
                   ₹{Number(o.total_amount)}
                 </span>
               </div>
+              {(Number(o.shipping_amount) > 0 || Number(o.cod_fee) > 0) && (
+                <p className="deva text-right text-[11px] text-muted-foreground">
+                  {Number(o.shipping_amount) > 0 && `डिलिव्हरी ₹${Number(o.shipping_amount)}`}
+                  {Number(o.shipping_amount) > 0 && Number(o.cod_fee) > 0 && " + "}
+                  {Number(o.cod_fee) > 0 && `COD शुल्क ₹${Number(o.cod_fee)}`} समाविष्ट
+                </p>
+              )}
               <p className="deva mt-1 text-sm text-foreground">
                 {o.customer_name} · {o.customer_phone}
               </p>

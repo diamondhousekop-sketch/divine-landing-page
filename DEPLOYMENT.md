@@ -213,9 +213,12 @@ Set every key from `.env.example`. Only the `VITE_*` ones reach the browser;
 ## 6. Go-live checklist
 
 - [ ] Ran `supabase/migrations/0001_init.sql`, `0002_uploadable_media.sql`,
-      `0003_color_group.sql` and `0004_upi_payments.sql` (in that order) in the Supabase SQL Editor
+      `0003_color_group.sql`, `0004_upi_payments.sql`, `0005_harden_functions.sql` and
+      `0006_shipping.sql` (in that order) in the Supabase SQL Editor
 - [ ] (If using UPI) saved UPI ID + payee name in `/admin/integrations` and placed a real test UPI order
 - [ ] Created a real admin user with your own email + a strong, unique password
+      (admins need `app_metadata.role = "admin"`; users created from the admin panel get it automatically)
+- [ ] (Optional) `/admin/integrations` → shipping charges / colour-letter switch configured
 - [ ] Set all `.env` values on Hostinger (or committed nothing secret — `.env` is gitignored)
 - [ ] Hostinger Node version is set to **22.x**
 - [ ] Verified `npm run build` produces `.output/server/index.mjs`

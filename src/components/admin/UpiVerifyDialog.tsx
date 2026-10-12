@@ -98,6 +98,15 @@ export function UpiVerifyDialog({
         <div className="rounded-xl bg-navy px-4 py-3 text-center text-gold-light">
           <p className="deva text-xs opacity-80">बँकेत ही रक्कम आली आहे का तपासा</p>
           <p className="font-display text-3xl font-bold text-gold">₹{Number(order.total_amount)}</p>
+          {Number(order.shipping_amount) > 0 && (
+            <p className="deva mt-1 text-[11px] opacity-80">
+              वस्तू ₹
+              {Number(order.total_amount) -
+                Number(order.shipping_amount) -
+                Number(order.cod_fee || 0)}{" "}
+              + डिलिव्हरी ₹{Number(order.shipping_amount)}
+            </p>
+          )}
         </div>
 
         <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-sm">

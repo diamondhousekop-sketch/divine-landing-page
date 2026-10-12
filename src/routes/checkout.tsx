@@ -6,7 +6,13 @@ import { z } from "zod";
 import { Loader2, ShieldCheck, Truck, Phone } from "lucide-react";
 import { UpiPayPanel, type UpiPending } from "@/components/UpiPayPanel";
 import { UpiTrustStrip } from "@/components/UpiAppBadges";
-import { getActiveProduct } from "@/lib/queries";
+import { getActiveProduct, getSiteContent } from "@/lib/queries";
+import {
+  calcShipping,
+  DEFAULT_SHIPPING,
+  normalizeShipping,
+  type ShippingConfig,
+} from "@/lib/shipping";
 import { publicPost } from "@/lib/admin-api";
 import { track } from "@/lib/analytics";
 import { GoldSwash } from "@/components/GoldSwash";
@@ -27,7 +33,8 @@ const schema = z.object({
     .regex(/^\d{6}$/, "6 अंकी पिनकोड टाका"),
   quantity: z.coerce.number().int().min(1).max(10),
   payment_method: z.enum(["cod", "online", "upi"]),
-  color_letter: z.string().trim().min(1, "कृपया तुमच्या नावाचे अक्षर निवडा"),
+  // Required only while the owner keeps the colour feature ON (checked in onSubmit).
+  color_letter: z.string().trim().optional(),
 });
 type FormValues = z.input<typeof schema>;
 
@@ -36,7 +43,14 @@ export const Route = createFileRoute("/checkout")({
   validateSearch: (s: Record<string, unknown>): { letter?: string } =>
     typeof s["letter"] === "string" ? { letter: s["letter"] } : {},
   loaderDeps: ({ search }) => ({ letter: search.letter }),
-  loader: async ({ deps }) => ({ product: await getActiveProduct(), letter: deps.letter ?? "" }),
+  loader: async ({ deps }) => {
+    const [product, content] = await Promise.all([getActiveProduct(), getSiteContent()]);
+    return {
+      product,
+      letter: deps.letter ?? "",
+      colorPickerOn: content["feature_color_picker"] !== "off",
+    };
+  },
   component: Checkout,
 });
 
@@ -80,11 +94,13 @@ function saveUpiPending(v: UpiPending | null) {
 }
 
 function Checkout() {
-  const { product, letter: initialLetter } = Route.useLoaderData();
+  const { product, letter: initialLetter, colorPickerOn } = Route.useLoaderData();
   const navigate = useNavigate();
   const [onlineEnabled, setOnlineEnabled] = useState(false);
   const [codEnabled, setCodEnabled] = useState(true);
   const [configLoaded, setConfigLoaded] = useState(false);
+  const [colorEnabled, setColorEnabled] = useState(colorPickerOn);
+  const [shippingCfg, setShippingCfg] = useState<ShippingConfig>(DEFAULT_SHIPPING);
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [upiEnabled, setUpiEnabled] = useState(false);
@@ -100,6 +116,7 @@ function Checkout() {
     handleSubmit,
     watch,
     setValue,
+    setError,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -113,6 +130,8 @@ function Checkout() {
       .then((r) => r.json())
       .then((d) => {
         setOnlineEnabled(!!d.online_enabled);
+        setShippingCfg(normalizeShipping(d.shipping));
+        setColorEnabled(d.color_picker_enabled !== false);
         const cod = d.cod_enabled !== false;
         setCodEnabled(cod);
         const upi = !!d.upi_enabled;
@@ -131,7 +150,17 @@ function Checkout() {
   }, [setValue]);
 
   const qty = Number(watch("quantity") || 1);
-  const total = product.price * qty;
+  const itemsTotal = product.price * qty;
+  const pincodeValue = watch("customer_pincode") || "";
+  const methodValue = watch("payment_method") || "cod";
+  // Same function the server uses, so the price shown here is the price charged.
+  const quote = calcShipping(shippingCfg, itemsTotal, pincodeValue, methodValue);
+  // Until a valid pincode is typed the delivery charge is unknown, so show items only.
+  const total = shippingCfg.enabled && !quote.pincode_known ? itemsTotal : quote.total;
+  const toFree =
+    shippingCfg.enabled && shippingCfg.free_above > 0 && itemsTotal < shippingCfg.free_above
+      ? shippingCfg.free_above - itemsTotal
+      : 0;
 
   // Fire InitiateCheckout / begin_checkout once when the checkout loads.
   useEffect(() => {
@@ -145,6 +174,11 @@ function Checkout() {
 
   const onSubmit = async (values: FormValues) => {
     setServerError(null);
+    if (colorEnabled && !values.color_letter?.trim()) {
+      setError("color_letter", { message: "कृपया तुमच्या नावाचे अक्षर निवडा" });
+      if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     setSubmitting(true);
     try {
       const payload = {
@@ -152,7 +186,8 @@ function Checkout() {
         quantity: Number(values.quantity),
         customer_email: values.customer_email || undefined,
         product_id: product.id || undefined,
-        color_group: groupForLetter(values.color_letter)?.id,
+        color_letter: colorEnabled ? values.color_letter : "",
+        color_group: colorEnabled ? groupForLetter(values.color_letter ?? "")?.id : undefined,
       };
       const { order, upi } = await publicPost<{
         order: { id: string; order_number: string; total_amount: number; payment_method: string };
@@ -273,17 +308,25 @@ function Checkout() {
               data-testid="checkout-form"
             >
               {upiEnabled && <UpiTrustStrip />}
-              <h2 className="deva text-xl text-foreground">तुमचा शुभ रंग</h2>
-              <div className="surface-card mt-4 p-5">
-                <ColorLetterPicker
-                  letter={colorLetter}
-                  onChange={(l) => setValue("color_letter", l, { shouldValidate: true })}
-                  required
-                  {...(errors.color_letter?.message ? { error: errors.color_letter.message } : {})}
-                />
-              </div>
+              {colorEnabled && (
+                <>
+                  <h2 className="deva text-xl text-foreground">तुमचा शुभ रंग</h2>
+                  <div className="surface-card mt-4 p-5">
+                    <ColorLetterPicker
+                      letter={colorLetter}
+                      onChange={(l) => setValue("color_letter", l, { shouldValidate: true })}
+                      required
+                      {...(errors.color_letter?.message
+                        ? { error: errors.color_letter.message }
+                        : {})}
+                    />
+                  </div>
+                </>
+              )}
 
-              <h2 className="deva mt-8 text-xl text-foreground">ग्राहक माहिती</h2>
+              <h2 className={`deva text-xl text-foreground ${colorEnabled ? "mt-8" : ""}`}>
+                ग्राहक माहिती
+              </h2>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 <div className="sm:col-span-2">
                   <label className="deva text-sm text-foreground">पूर्ण नाव *</label>
@@ -399,6 +442,11 @@ function Checkout() {
                     />
                     <span className="deva text-sm text-foreground">
                       Cash on Delivery — घरपोच आल्यावर पैसे द्या 🚚
+                      {shippingCfg.enabled && shippingCfg.cod_fee > 0 && (
+                        <span className="block text-xs text-muted-foreground">
+                          COD हाताळणी शुल्क ₹{shippingCfg.cod_fee} लागू
+                        </span>
+                      )}
                     </span>
                   </label>
                 )}
@@ -466,6 +514,42 @@ function Checkout() {
                 <span className="deva text-muted-foreground">संख्या</span>
                 <span className="text-foreground">× {qty}</span>
               </div>
+              <div className="mt-2 flex items-center justify-between text-sm">
+                <span className="deva text-muted-foreground">डिलिव्हरी</span>
+                <span className="deva text-foreground" data-testid="summary-shipping">
+                  {!shippingCfg.enabled
+                    ? "मोफत"
+                    : !quote.pincode_known
+                      ? "पिनकोड टाका"
+                      : quote.shipping > 0
+                        ? `₹${quote.shipping}`
+                        : "मोफत 🎉"}
+                </span>
+              </div>
+              {quote.cod_fee > 0 && (
+                <div className="mt-2 flex items-center justify-between text-sm">
+                  <span className="deva text-muted-foreground">COD हाताळणी शुल्क</span>
+                  <span className="text-foreground" data-testid="summary-cod-fee">
+                    ₹{quote.cod_fee}
+                  </span>
+                </div>
+              )}
+              {quote.zone && quote.shipping > 0 && (
+                <p className="deva mt-1 text-[11px] text-muted-foreground">({quote.zone})</p>
+              )}
+              {shippingCfg.enabled && !quote.pincode_known && (
+                <p className="deva mt-2 text-[11px] text-muted-foreground">
+                  डिलिव्हरी शुल्क पिनकोड टाकल्यावर आपोआप जोडले जाईल.
+                </p>
+              )}
+              {toFree > 0 && quote.pincode_known && (
+                <p className="deva mt-2 rounded-lg bg-secondary/60 px-3 py-2 text-[11px] text-foreground">
+                  आणखी ₹{toFree} ची खरेदी केल्यास डिलिव्हरी मोफत!
+                </p>
+              )}
+              {shippingCfg.note && (
+                <p className="deva mt-2 text-[11px] text-muted-foreground">{shippingCfg.note}</p>
+              )}
               <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
                 <span className="deva font-medium text-primary">एकूण रक्कम</span>
                 <span

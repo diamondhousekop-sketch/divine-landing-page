@@ -518,9 +518,11 @@ function Index() {
               }
               videoUrl={product.video_url || ""}
             />
-            <div className="surface-card mt-5 p-5">
-              <ColorLetterPicker letter={colorLetter} onChange={setColorLetter} />
-            </div>
+            {content["feature_color_picker"] !== "off" && (
+              <div className="surface-card mt-5 p-5">
+                <ColorLetterPicker letter={colorLetter} onChange={setColorLetter} />
+              </div>
+            )}
           </Reveal>
 
           <Reveal delay={120}>

@@ -63,6 +63,8 @@ export type InvoiceOrder = {
   customer_email: string | null;
   quantity: number;
   total_amount: number;
+  shipping_amount?: number | null;
+  cod_fee?: number | null;
   payment_method: string;
   payment_status: string;
   created_at: string;
@@ -222,22 +224,29 @@ export async function buildInvoicePdf(
   rightText("RATE", M + 440, tableTop + 4, 9, bold, C.gold);
   rightText("AMOUNT", W - M - 10, tableTop + 4, 9, bold, C.gold);
 
-  const rate =
-    order.quantity > 0 ? Number(order.total_amount) / order.quantity : Number(order.total_amount);
+  const shipAmt = Number(order.shipping_amount ?? 0);
+  const codFee = Number(order.cod_fee ?? 0);
+  const itemsTotal = Math.max(0, Number(order.total_amount) - shipAmt - codFee);
+  const rate = order.quantity > 0 ? itemsTotal / order.quantity : itemsTotal;
   let ry = tableTop - 22;
   text(latin(biz.product_label, "Icchapurti Lucky Stone"), M + 10, ry + 5, 10, font);
   rightText(String(order.quantity), M + 360, ry + 5, 10, font);
   rightText(money(rate), M + 440, ry + 5, 10, font);
-  rightText(money(Number(order.total_amount)), W - M - 10, ry + 5, 10, font);
+  rightText(money(itemsTotal), W - M - 10, ry + 5, 10, font);
   page.drawLine({ start: { x: M, y: ry }, end: { x: W - M, y: ry }, thickness: 1, color: C.line });
 
   // ── Totals ──
   ry -= 24;
   rightText("Subtotal", W - M - 120, ry, 10, font, C.muted);
-  rightText(money(Number(order.total_amount)), W - M - 10, ry, 10, font);
+  rightText(money(itemsTotal), W - M - 10, ry, 10, font);
   ry -= 18;
   rightText("Shipping", W - M - 120, ry, 10, font, C.muted);
-  rightText("FREE", W - M - 10, ry, 10, font);
+  rightText(shipAmt > 0 ? money(shipAmt) : "FREE", W - M - 10, ry, 10, font);
+  if (codFee > 0) {
+    ry -= 18;
+    rightText("COD handling fee", W - M - 120, ry, 10, font, C.muted);
+    rightText(money(codFee), W - M - 10, ry, 10, font);
+  }
   ry -= 8;
   page.drawRectangle({ x: W - M - 220, y: ry - 26, width: 220, height: 26, color: C.maroon });
   text("TOTAL", W - M - 210, ry - 18, 12, bold, C.gold);

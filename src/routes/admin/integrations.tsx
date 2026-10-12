@@ -1,7 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, Save, BarChart3, Truck, FileText, Smartphone } from "lucide-react";
+import {
+  Loader2,
+  Save,
+  BarChart3,
+  Truck,
+  FileText,
+  Smartphone,
+  Plus,
+  Trash2,
+  Package,
+} from "lucide-react";
 import { UPI_ID_REGEX } from "@/lib/upi";
+import { calcShipping, DEFAULT_SHIPPING, normalizeShipping } from "@/lib/shipping";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { adminFetch } from "@/lib/admin-api";
 
@@ -38,6 +49,18 @@ function IntegrationsPage() {
     gsc_verification: "",
   });
   const [codEnabled, setCodEnabled] = useState(true);
+  const [colorEnabled, setColorEnabled] = useState(true);
+  // Zones are edited as text ("416, 415") and turned into arrays when saving.
+  type ZoneRow = { label: string; prefixes: string; fee: string };
+  const [ship, setShip] = useState({
+    enabled: DEFAULT_SHIPPING.enabled,
+    flat_fee: "0",
+    free_above: "0",
+    cod_fee: "0",
+    note: "",
+  });
+  const [zones, setZones] = useState<ZoneRow[]>([]);
+  const [previewPin, setPreviewPin] = useState("416001");
   const [upi, setUpi] = useState({ enabled: false, upi_id: "", payee_name: "" });
   const upiIdInvalid = upi.upi_id.trim() !== "" && !UPI_ID_REGEX.test(upi.upi_id.trim());
   const [invoicing, setInvoicing] = useState<Invoicing>({
@@ -58,6 +81,8 @@ function IntegrationsPage() {
           checkout: { cod_enabled?: boolean };
           invoicing: Partial<Invoicing>;
           upi?: { enabled?: boolean; upi_id?: string; payee_name?: string };
+          color_picker_enabled?: boolean;
+          shipping?: unknown;
         }>("/api/admin/store-settings");
         setUpi({
           enabled: d.upi?.enabled === true,
@@ -66,6 +91,22 @@ function IntegrationsPage() {
         });
         setMarketing((p) => ({ ...p, ...d.marketing }));
         setCodEnabled(d.checkout?.cod_enabled !== false);
+        setColorEnabled(d.color_picker_enabled !== false);
+        const sh = normalizeShipping(d.shipping);
+        setShip({
+          enabled: sh.enabled,
+          flat_fee: String(sh.flat_fee),
+          free_above: String(sh.free_above),
+          cod_fee: String(sh.cod_fee),
+          note: sh.note,
+        });
+        setZones(
+          sh.zones.map((z) => ({
+            label: z.label,
+            prefixes: z.prefixes.join(", "),
+            fee: String(z.fee),
+          })),
+        );
         setInvoicing((p) => ({ ...p, ...d.invoicing }));
       } catch {
         /* ignore */
@@ -75,10 +116,59 @@ function IntegrationsPage() {
     })();
   }, []);
 
+  // Turns the typed shipping form into a validated payload (or an error message).
+  const buildShipping = () => {
+    const num = (v: string) => (v.trim() === "" ? 0 : Number(v));
+    const flat = num(ship.flat_fee);
+    const free = num(ship.free_above);
+    const cod = num(ship.cod_fee);
+    for (const [name, v] of [
+      ["सामान्य डिलिव्हरी शुल्क", flat],
+      ["मोफत डिलिव्हरीची मर्यादा", free],
+      ["COD शुल्क", cod],
+    ] as const) {
+      if (!Number.isFinite(v) || v < 0) return `${name}: ० किंवा जास्त रक्कम टाका.`;
+    }
+    const zoneOut: { label: string; prefixes: string[]; fee: number }[] = [];
+    for (const [i, z] of zones.entries()) {
+      const prefixes = z.prefixes.split(/[\s,]+/).filter(Boolean);
+      if (prefixes.length === 0 && !z.label.trim() && z.fee.trim() === "") continue;
+      if (prefixes.length === 0 || prefixes.some((p) => !/^\d{1,6}$/.test(p))) {
+        return `भाग ${i + 1}: पिनकोडची सुरुवात फक्त अंकांत टाका (उदा. 416, 415).`;
+      }
+      const fee = num(z.fee);
+      if (!Number.isFinite(fee) || fee < 0) return `भाग ${i + 1}: शुल्क ० किंवा जास्त टाका.`;
+      zoneOut.push({ label: z.label.trim(), prefixes, fee });
+    }
+    return {
+      enabled: ship.enabled,
+      flat_fee: flat,
+      free_above: free,
+      cod_fee: cod,
+      note: ship.note.trim(),
+      zones: zoneOut,
+    };
+  };
+
+  const preview = (() => {
+    const p = buildShipping();
+    if (typeof p === "string") return null;
+    const cfg = normalizeShipping(p);
+    return {
+      upi: calcShipping(cfg, 1100, previewPin, "upi"),
+      cod: calcShipping(cfg, 1100, previewPin, "cod"),
+    };
+  })();
+
   const save = async () => {
     setMsg(null);
     if (upiIdInvalid || (upi.enabled && !UPI_ID_REGEX.test(upi.upi_id.trim()))) {
       setMsg("UPI ID बरोबर टाका (उदा. diamondhouse@okaxis) — मगच UPI सुरू करा.");
+      return;
+    }
+    const shippingPayload = buildShipping();
+    if (typeof shippingPayload === "string") {
+      setMsg(shippingPayload);
       return;
     }
     setSaving(true);
@@ -86,6 +176,8 @@ function IntegrationsPage() {
       await adminFetch("/api/admin/store-settings", {
         method: "PUT",
         body: {
+          color_picker_enabled: colorEnabled,
+          shipping: shippingPayload,
           marketing,
           checkout: { cod_enabled: codEnabled },
           invoicing,
@@ -194,6 +286,171 @@ function IntegrationsPage() {
                 COD बंद आहे — ग्राहक फक्त ऑनलाईन पेमेंट करू शकतील. ऑनलाईन पेमेंट सुरू असल्याची
                 खात्री करा (Content → Payments).
               </p>
+            )}
+            <label className="mt-5 flex items-start gap-3 text-sm">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={colorEnabled}
+                onChange={(e) => setColorEnabled(e.target.checked)}
+                data-testid="cfg-color-enabled"
+              />
+              <span className="deva">
+                शुभ रंग / नावाचे अक्षर निवडण्याची सुविधा सुरू ठेवा
+                <span className="block text-xs text-muted-foreground">
+                  बंद केल्यास मुख्य पान व चेकआऊटमधून ही सुविधा पूर्णपणे गायब होते आणि ऑर्डरसाठी
+                  अक्षर लागत नाही.
+                </span>
+              </span>
+            </label>
+          </div>
+
+          {/* Shipping charges */}
+          <div className="surface-card p-6 lg:col-span-2" data-testid="integrations-shipping">
+            <h2 className="flex items-center gap-2 text-lg text-foreground">
+              <Package className="h-5 w-5 text-accent" /> डिलिव्हरी (शिपिंग) शुल्क
+            </h2>
+            <p className="deva mt-1 text-xs text-muted-foreground">
+              बंद असेल तर डिलिव्हरी सर्वांसाठी मोफत. सुरू केल्यास चेकआऊटवर पिनकोडनुसार शुल्क आपोआप
+              मोजले जाते, एकूण रकमेत जोडले जाते आणि UPI/कार्डमध्ये तीच रक्कम भरायला दिसते.
+            </p>
+            <label className="mt-4 flex items-center gap-3 text-sm">
+              <input
+                type="checkbox"
+                checked={ship.enabled}
+                onChange={(e) => setShip({ ...ship, enabled: e.target.checked })}
+                data-testid="cfg-ship-enabled"
+              />
+              <span className="deva">डिलिव्हरी शुल्क आकारा</span>
+            </label>
+
+            {ship.enabled && (
+              <div className="mt-5 space-y-5">
+                <div className="grid gap-4 sm:grid-cols-3">
+                  {field(
+                    "सामान्य डिलिव्हरी शुल्क (₹)",
+                    ship.flat_fee,
+                    (v) => setShip({ ...ship, flat_fee: v }),
+                    "cfg-ship-flat",
+                    "उदा. 80",
+                  )}
+                  {field(
+                    "इतक्या खरेदीवर डिलिव्हरी मोफत (₹, 0 = कधीच नाही)",
+                    ship.free_above,
+                    (v) => setShip({ ...ship, free_above: v }),
+                    "cfg-ship-free",
+                    "उदा. 2000",
+                  )}
+                  {field(
+                    "COD हाताळणी शुल्क (₹, ऐच्छिक)",
+                    ship.cod_fee,
+                    (v) => setShip({ ...ship, cod_fee: v }),
+                    "cfg-ship-cod",
+                    "उदा. 30",
+                  )}
+                </div>
+
+                <div>
+                  <p className="deva text-sm font-medium text-foreground">
+                    भागानुसार वेगळे शुल्क (ऐच्छिक)
+                  </p>
+                  <p className="deva text-xs text-muted-foreground">
+                    पिनकोडची सुरुवात टाका (उदा. कोल्हापूरसाठी 416, 415). जो भाग जुळेल त्याचे शुल्क
+                    लागेल; कुठलाच जुळला नाही तर वरचे सामान्य शुल्क.
+                  </p>
+                  <div className="mt-3 space-y-2" data-testid="ship-zones">
+                    {zones.map((z, i) => (
+                      <div key={i} className="grid grid-cols-[1fr_1.4fr_90px_36px] gap-2">
+                        <input
+                          className={inputCls}
+                          placeholder="नाव (उदा. कोल्हापूर)"
+                          value={z.label}
+                          onChange={(e) =>
+                            setZones(
+                              zones.map((r, j) => (j === i ? { ...r, label: e.target.value } : r)),
+                            )
+                          }
+                        />
+                        <input
+                          className={inputCls}
+                          placeholder="पिनकोड सुरुवात: 416, 415"
+                          value={z.prefixes}
+                          onChange={(e) =>
+                            setZones(
+                              zones.map((r, j) =>
+                                j === i ? { ...r, prefixes: e.target.value } : r,
+                              ),
+                            )
+                          }
+                        />
+                        <input
+                          className={inputCls}
+                          placeholder="₹"
+                          inputMode="decimal"
+                          value={z.fee}
+                          onChange={(e) =>
+                            setZones(
+                              zones.map((r, j) => (j === i ? { ...r, fee: e.target.value } : r)),
+                            )
+                          }
+                        />
+                        <button
+                          type="button"
+                          aria-label="भाग काढा"
+                          onClick={() => setZones(zones.filter((_, j) => j !== i))}
+                          className="mt-1 flex h-10 items-center justify-center rounded-xl border border-border text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  {zones.length < 20 && (
+                    <button
+                      type="button"
+                      onClick={() => setZones([...zones, { label: "", prefixes: "", fee: "" }])}
+                      className="deva mt-3 inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-1.5 text-xs"
+                      data-testid="ship-add-zone"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> भाग जोडा
+                    </button>
+                  )}
+                </div>
+
+                {field(
+                  "ग्राहकाला दाखवायची छोटी सूचना (ऐच्छिक)",
+                  ship.note,
+                  (v) => setShip({ ...ship, note: v }),
+                  "cfg-ship-note",
+                  "उदा. डिलिव्हरी ३–५ दिवसांत",
+                )}
+
+                {preview && (
+                  <div
+                    className="rounded-xl border border-border bg-secondary/40 p-4 text-sm"
+                    data-testid="ship-preview"
+                  >
+                    <p className="deva text-xs text-muted-foreground">
+                      तपासून पहा — ₹1100 च्या ऑर्डरसाठी या पिनकोडवर:
+                    </p>
+                    <input
+                      className={`${inputCls} max-w-[160px]`}
+                      value={previewPin}
+                      maxLength={6}
+                      inputMode="numeric"
+                      onChange={(e) => setPreviewPin(e.target.value.replace(/\D/g, ""))}
+                    />
+                    <p className="deva mt-2 text-foreground">
+                      UPI/Online: डिलिव्हरी ₹{preview.upi.shipping} →{" "}
+                      <b>एकूण ₹{preview.upi.total}</b>
+                    </p>
+                    <p className="deva text-foreground">
+                      COD: डिलिव्हरी ₹{preview.cod.shipping} + COD शुल्क ₹{preview.cod.cod_fee} →{" "}
+                      <b>एकूण ₹{preview.cod.total}</b>
+                    </p>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 

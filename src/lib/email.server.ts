@@ -54,6 +54,8 @@ type OrderLike = {
   customer_pincode: string;
   quantity: number;
   total_amount: number;
+  shipping_amount?: number | null;
+  cod_fee?: number | null;
   payment_method: string;
   payment_status: string;
   order_status: string;
@@ -91,6 +93,8 @@ function orderTable(order: OrderLike): string {
     <tr><td style="padding:6px 0;color:#6b5b4b;">पत्ता / Address</td><td style="padding:6px 0;text-align:right;">${esc(order.customer_address)}, ${esc(order.customer_pincode)}</td></tr>
     <tr><td style="padding:6px 0;color:#6b5b4b;">संख्या / Qty</td><td style="padding:6px 0;text-align:right;">${order.quantity}</td></tr>
     <tr><td style="padding:6px 0;color:#6b5b4b;">पेमेंट / Payment</td><td style="padding:6px 0;text-align:right;">${method}</td></tr>
+    <tr><td style="padding:6px 0;color:#6b5b4b;">डिलिव्हरी / Shipping</td><td style="padding:6px 0;text-align:right;">${Number(order.shipping_amount ?? 0) > 0 ? `₹${Number(order.shipping_amount)}` : "मोफत / Free"}</td></tr>
+    ${Number(order.cod_fee ?? 0) > 0 ? `<tr><td style="padding:6px 0;color:#6b5b4b;">COD शुल्क / COD fee</td><td style="padding:6px 0;text-align:right;">₹${Number(order.cod_fee)}</td></tr>` : ""}
     <tr><td style="padding:10px 0;color:${BRAND.maroon};font-weight:bold;">एकूण / Total</td><td style="padding:10px 0;text-align:right;color:${BRAND.maroon};font-weight:bold;font-size:18px;">₹${order.total_amount}</td></tr>
   </table>`;
 }

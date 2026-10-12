@@ -5,6 +5,7 @@ import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit.server";
 import { json, badRequest, serverError, generateOrderNumber } from "@/lib/http.server";
 import { sendOrderConfirmation, sendAdminAlert } from "@/lib/email.server";
 import { getUpiSettings, upiReady, signProofToken } from "@/lib/upi.server";
+import { calcShipping, normalizeShipping } from "@/lib/shipping";
 
 const OrderInput = z.object({
   customer_name: z.string().trim().min(2).max(120),
@@ -91,7 +92,29 @@ export const Route = createFileRoute("/api/orders")({
             upi = s;
           }
 
-          const total = Number(product.price) * input.quantity;
+          // Delivery charge + COD fee are calculated HERE from the owner's saved rules,
+          // never from anything the browser sends.
+          const { data: shipRow } = await admin
+            .from("admin_settings")
+            .select("value")
+            .eq("key", "shipping")
+            .maybeSingle();
+          const itemsTotal = Number(product.price) * input.quantity;
+          const quote = calcShipping(
+            normalizeShipping(shipRow?.value),
+            itemsTotal,
+            input.customer_pincode,
+            input.payment_method,
+          );
+          const total = quote.total;
+
+          // Colour-letter feature can be switched off by the owner.
+          const { data: cpRow } = await admin
+            .from("site_content")
+            .select("value")
+            .eq("key", "feature_color_picker")
+            .maybeSingle();
+          const colorOn = cpRow?.value !== "off";
           const orderNumber = generateOrderNumber();
 
           const insertRow = {
@@ -104,11 +127,13 @@ export const Route = createFileRoute("/api/orders")({
             product_id: product.id,
             quantity: input.quantity,
             total_amount: total,
+            shipping_amount: quote.shipping,
+            cod_fee: quote.cod_fee,
             payment_method: input.payment_method,
             payment_status: "pending" as const,
             order_status: "placed" as const,
-            color_letter: input.color_letter || null,
-            color_group: input.color_group || null,
+            color_letter: colorOn ? input.color_letter || null : null,
+            color_group: colorOn ? input.color_group || null : null,
           };
 
           const { data: order, error: insErr } = await admin
@@ -138,6 +163,8 @@ export const Route = createFileRoute("/api/orders")({
               id: order.id,
               order_number: order.order_number,
               total_amount: Number(order.total_amount),
+              shipping_amount: Number(order.shipping_amount ?? 0),
+              cod_fee: Number(order.cod_fee ?? 0),
               payment_method: order.payment_method,
             },
             ...(upi
