@@ -26,7 +26,9 @@ export function getAdminClient(): SupabaseClient {
 }
 
 // Verifies a Supabase Auth access token and returns the user, or null if invalid.
-// Any authenticated Supabase user is treated as an admin for this single-tenant store.
+// Only users whose app_metadata.role is "admin" count as admins. app_metadata can
+// only be written with the service-role key (never by the user), so a stranger who
+// signs up through Supabase Auth can NOT use the admin API.
 export async function requireAdmin(request: Request) {
   const header = request.headers.get("authorization") || request.headers.get("Authorization") || "";
   const token = header.replace(/^Bearer\s+/i, "").trim();
@@ -36,6 +38,10 @@ export async function requireAdmin(request: Request) {
     const { data, error } = await admin.auth.getUser(token);
     if (error || !data?.user) {
       console.error("[requireAdmin] token rejected:", error?.message);
+      return null;
+    }
+    if (data.user.app_metadata?.["role"] !== "admin") {
+      console.error("[requireAdmin] user is not an admin:", data.user.id);
       return null;
     }
     return data.user;

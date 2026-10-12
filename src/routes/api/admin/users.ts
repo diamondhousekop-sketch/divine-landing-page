@@ -56,6 +56,7 @@ export const Route = createFileRoute("/api/admin/users")({
             email: parsed.data.email,
             password: parsed.data.password,
             email_confirm: true,
+            app_metadata: { role: "admin" },
           });
           if (error) return badRequest(error.message || "Could not create admin");
           return json({ user: { id: data.user.id, email: data.user.email } });

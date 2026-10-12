@@ -95,5 +95,13 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^8.2.0"
+  },
+  "overrides": {
+    "axios": "1.20.0",
+    "seroval": "1.6.9",
+    "seroval-plugins": "1.6.9",
+    "fast-uri": "^3.1.8",
+    "js-yaml": "^4.3.2",
+    "source-map-js": "1.2.2"
   }
 }

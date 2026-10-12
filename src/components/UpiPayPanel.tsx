@@ -205,9 +205,7 @@ export function UpiPayPanel({
             className="shimmer cta-gold-pulse relative mt-4 inline-flex min-h-[54px] w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-[var(--whatsapp)] px-6 text-base font-semibold text-white"
           >
             <Smartphone className="relative z-10 h-5 w-5" />
-            <span className="deva relative z-10">
-              UPI ॲपने ₹{order.total_amount} भरा
-            </span>
+            <span className="deva relative z-10">UPI ॲपने ₹{order.total_amount} भरा</span>
           </a>
         )}
 
