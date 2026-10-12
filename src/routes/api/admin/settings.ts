@@ -74,6 +74,11 @@ export const Route = createFileRoute("/api/admin/settings")({
           if (parsed.data.key_secret) next["key_secret"] = parsed.data.key_secret;
           if (parsed.data.webhook_secret) next["webhook_secret"] = parsed.data.webhook_secret;
           if (parsed.data.enabled !== undefined) next["enabled"] = parsed.data.enabled;
+          if (next["enabled"] === true && (!next["key_id"] || !next["key_secret"])) {
+            return badRequest(
+              "Razorpay सुरू करण्यासाठी Key ID आणि Key Secret दोन्ही हवेत. UPI साठी 'सेटिंग्ज (Integrations)' पेज वापरा.",
+            );
+          }
 
           const { error } = await admin
             .from("admin_settings")

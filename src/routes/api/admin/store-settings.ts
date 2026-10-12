@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getAdminClient, requireAdmin, unauthorized } from "@/lib/supabase.server";
 import { json, badRequest, serverError } from "@/lib/http.server";
 import { UPI_ID_REGEX } from "@/lib/upi";
+import { getRazorpayConfig } from "@/lib/razorpay.server";
 
 // Admin-managed PUBLIC store settings kept in admin_settings:
 //   - marketing  : Meta Pixel / GA4 / GTM / Search Console IDs (public identifiers,
@@ -113,6 +114,23 @@ export const Route = createFileRoute("/api/admin/store-settings")({
             rows.push({ key, value: { ...current, ...incoming } });
           }
           if (rows.length === 0) return badRequest("Nothing to update");
+          // Safety net: never let the shop end up with NO way to pay.
+          const finalOf = (k: string) =>
+            (rows.find((r) => r.key === k)?.value as Record<string, unknown> | undefined) ?? null;
+          const checkoutFinal = finalOf("checkout") ?? (await readKey(admin, "checkout"));
+          if (checkoutFinal["cod_enabled"] === false) {
+            const upiFinal = finalOf("upi") ?? (await readKey(admin, "upi"));
+            const upiOk =
+              upiFinal["enabled"] === true &&
+              typeof upiFinal["upi_id"] === "string" &&
+              UPI_ID_REGEX.test(upiFinal["upi_id"]);
+            const rzpOk = !!(await getRazorpayConfig());
+            if (!upiOk && !rzpOk) {
+              return badRequest(
+                "COD बंद करण्यापूर्वी UPI सुरू करा (वैध UPI ID टाकून) — नाहीतर ग्राहकांना पेमेंटचा पर्याय राहणार नाही.",
+              );
+            }
+          }
           const { error } = await admin.from("admin_settings").upsert(rows, { onConflict: "key" });
           if (error) return serverError("Could not save settings");
           return json({ ok: true });

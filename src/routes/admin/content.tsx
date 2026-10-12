@@ -212,6 +212,13 @@ function ContentPage() {
               Razorpay Dashboard मधून keys घ्या. सिक्रेट सुरक्षितपणे सेव्ह होतात (परत दाखवले जात
               नाहीत).
             </p>
+            <p
+              className="deva mt-3 rounded-xl bg-accent/10 px-4 py-3 text-xs text-foreground"
+              data-testid="rzp-upi-note"
+            >
+              ⚠️ हे फक्त Razorpay गेटवेसाठी आहे. गेटवे नसेल तर हे रिकामे ठेवा. <b>UPI पेमेंट</b>{" "}
+              सुरू करण्यासाठी डाव्या मेनूमधील <b>सेटिंग्ज (Integrations)</b> → “UPI Payment” वापरा.
+            </p>
             <div className="mt-5 space-y-4">
               <div>
                 <label className="text-sm text-foreground">Key ID (rzp_live_… / rzp_test_…)</label>
@@ -269,6 +276,9 @@ function ContentPage() {
                 <input
                   type="checkbox"
                   checked={rzp.enabled}
+                  disabled={
+                    !rzp.key_id.trim() || !(rzpInfo.has_key_secret || rzp.key_secret.trim())
+                  }
                   onChange={(e) => setRzp({ ...rzp, enabled: e.target.checked })}
                   data-testid="rzp-enabled"
                 />

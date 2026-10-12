@@ -83,6 +83,7 @@ function Checkout() {
   const navigate = useNavigate();
   const [onlineEnabled, setOnlineEnabled] = useState(false);
   const [codEnabled, setCodEnabled] = useState(true);
+  const [configLoaded, setConfigLoaded] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [upiEnabled, setUpiEnabled] = useState(false);
@@ -119,10 +120,12 @@ function Checkout() {
         // and fall back to online if COD was switched off.
         if (upi) setValue("payment_method", "upi");
         else if (!cod && d.online_enabled) setValue("payment_method", "online");
+        setConfigLoaded(true);
       })
       .catch(() => {
         setOnlineEnabled(false);
         setCodEnabled(true);
+        setConfigLoaded(true);
       });
   }, [setValue]);
 
@@ -384,36 +387,39 @@ function Checkout() {
                     </span>
                   </label>
                 )}
-                <label
-                  className={`surface-card flex items-center gap-3 px-4 py-3 ${codEnabled ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}
-                >
-                  <input
-                    type="radio"
-                    value="cod"
-                    disabled={!codEnabled}
-                    data-testid="payment-cod"
-                    {...register("payment_method")}
-                  />
-                  <span className="deva text-sm text-foreground">
-                    Cash on Delivery — घरपोच आल्यावर पैसे द्या 🚚
-                    {!codEnabled && " (सध्या बंद)"}
-                  </span>
-                </label>
-                {(onlineEnabled || !upiEnabled) && (
-                  <label
-                    className={`surface-card flex items-center gap-3 px-4 py-3 ${onlineEnabled ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}
-                  >
+                {codEnabled && (
+                  <label className="surface-card flex cursor-pointer items-center gap-3 px-4 py-3">
+                    <input
+                      type="radio"
+                      value="cod"
+                      data-testid="payment-cod"
+                      {...register("payment_method")}
+                    />
+                    <span className="deva text-sm text-foreground">
+                      Cash on Delivery — घरपोच आल्यावर पैसे द्या 🚚
+                    </span>
+                  </label>
+                )}
+                {onlineEnabled && (
+                  <label className="surface-card flex cursor-pointer items-center gap-3 px-4 py-3">
                     <input
                       type="radio"
                       value="online"
-                      disabled={!onlineEnabled}
                       data-testid="payment-online"
                       {...register("payment_method")}
                     />
                     <span className="deva text-sm text-foreground">
-                      Online Payment (UPI / Card) {onlineEnabled ? "🔒" : "— लवकरच उपलब्ध"}
+                      Online Payment (UPI / Card) 🔒
                     </span>
                   </label>
+                )}
+                {configLoaded && !codEnabled && !upiEnabled && !onlineEnabled && (
+                  <p
+                    className="deva rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive"
+                    data-testid="no-payment-method"
+                  >
+                    सध्या ऑर्डर स्वीकारणे तात्पुरते बंद आहे. कृपया WhatsApp वर संपर्क करा.
+                  </p>
                 )}
               </div>
 
@@ -428,7 +434,9 @@ function Checkout() {
 
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={
+                  submitting || (configLoaded && !codEnabled && !upiEnabled && !onlineEnabled)
+                }
                 data-testid="checkout-submit"
                 className="shimmer cta-gold-pulse relative mt-6 inline-flex min-h-[54px] w-full items-center justify-center overflow-hidden rounded-full bg-navy px-8 text-base font-semibold tracking-wide text-gold-light transition-transform duration-200 hover:scale-[1.02] disabled:opacity-70"
               >
