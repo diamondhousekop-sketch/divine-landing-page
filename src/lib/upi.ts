@@ -33,9 +33,8 @@ export function detectPlatform(ua: string): UpiPlatform {
 }
 
 export type UpiApp = {
-  id: "gpay" | "phonepe" | "paytm" | "bhim" | "cred";
+  id: "gpay" | "phonepe" | "paytm";
   name: string;
-  mono: string; // short monogram shown on the tile (we do not ship brand logos)
   androidPackage: string;
   iosPrefix: string; // scheme + path that precedes "?<upi params>"
 };
@@ -44,37 +43,20 @@ export const UPI_APPS: UpiApp[] = [
   {
     id: "gpay",
     name: "Google Pay",
-    mono: "G",
     androidPackage: "com.google.android.apps.nbu.paisa.user",
     iosPrefix: "gpay://upi/pay",
   },
   {
     id: "phonepe",
     name: "PhonePe",
-    mono: "Pe",
     androidPackage: "com.phonepe.app",
     iosPrefix: "phonepe://pay",
   },
   {
     id: "paytm",
     name: "Paytm",
-    mono: "Pt",
     androidPackage: "net.one97.paytm",
     iosPrefix: "paytmmp://pay",
-  },
-  {
-    id: "bhim",
-    name: "BHIM",
-    mono: "B",
-    androidPackage: "in.org.npci.upiapp",
-    iosPrefix: "upi://pay",
-  },
-  {
-    id: "cred",
-    name: "CRED",
-    mono: "C",
-    androidPackage: "com.dreamplug.androidapp",
-    iosPrefix: "credpay://upi/pay",
   },
 ];
 

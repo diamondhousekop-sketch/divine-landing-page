@@ -212,13 +212,13 @@ export function UpiPayPanel({
             <p className="deva text-center text-xs text-muted-foreground">
               तुमच्या UPI ॲपवर टॅप करा — ₹{order.total_amount} आणि दुकानाची UPI ID आपोआप भरली जाईल
             </p>
-            <div className="mt-3 grid grid-cols-5 gap-2">
+            <div className="mt-3 grid grid-cols-3 gap-2">
               {UPI_APPS.map((app) => (
                 <a
                   key={app.id}
                   href={buildAppLink(app, upi, order.total_amount, order.order_number, platform)}
                   data-testid={`upi-app-${app.id}`}
-                  className="flex flex-col items-center rounded-2xl border border-border bg-card px-1 py-2.5 transition active:scale-95"
+                  className="flex flex-col items-center rounded-2xl border border-border bg-card px-1 py-3 transition active:scale-95"
                 >
                   <UpiAppTile app={app} compact />
                 </a>
@@ -231,7 +231,7 @@ export function UpiPayPanel({
             >
               <Smartphone className="relative z-10 h-5 w-5" />
               <span className="deva relative z-10">
-                इतर कोणत्याही UPI ॲपने ₹{order.total_amount} भरा
+                BHIM / CRED / इतर UPI ॲपने ₹{order.total_amount} भरा
               </span>
             </a>
           </div>

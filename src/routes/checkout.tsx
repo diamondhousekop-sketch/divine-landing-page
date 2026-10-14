@@ -307,7 +307,6 @@ function Checkout() {
               className="surface-card p-6 md:p-8"
               data-testid="checkout-form"
             >
-              {upiEnabled && <UpiTrustStrip />}
               {colorEnabled && (
                 <>
                   <h2 className="deva text-xl text-foreground">तुमचा शुभ रंग</h2>
@@ -432,6 +431,7 @@ function Checkout() {
                     </span>
                   </label>
                 )}
+                {upiEnabled && watch("payment_method") === "upi" && <UpiTrustStrip />}
                 {codEnabled && (
                   <label className="surface-card flex cursor-pointer items-center gap-3 px-4 py-3">
                     <input
